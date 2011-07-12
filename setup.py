@@ -15,6 +15,14 @@ setup(
     package_dir = {"": "src"},
     namespace_packages = ["pwt"],
 
+    install_requires = ["setuptools"],
+
+    extras_require = {
+        "test": [
+            "WebTest",
+            ],
+        },
+
     include_package_data = True,
     zip_safe = False,
     )
