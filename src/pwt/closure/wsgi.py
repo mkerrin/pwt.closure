@@ -1,7 +1,9 @@
 import json
 import os
 import sys
+
 import webob.dec
+import paste.urlmap
 
 # Import the depswrite and source from closure-library checkout
 old_path = sys.path
@@ -21,7 +23,7 @@ ADVANCED = "ADVANCED"
 
 class Input(object):
 
-    def __init__(self, paths, inputs = None):
+    def __init__(self, paths, default_mode = None, inputs = None):
         self.paths = [os.path.abspath(path) for path in paths]
 
     @webob.dec.wsgify
@@ -29,7 +31,7 @@ class Input(object):
         path_info = request.path_info[1:] # remove '/'
         for path in self.paths:
             abspath = os.path.join(path, path_info)
-            if os.path.exists(abspath):
+            if os.path.isfile(abspath):
                 output = open(abspath).read()
                 status = 200
                 break
@@ -112,3 +114,14 @@ class Raw(object):
         
         return webob.Response(
             body = output, content_type = "application/javascript")
+
+
+class Combined(object):
+
+    def __init__(self, *args, **kwargs):
+        self.app = paste.urlmap.URLMap()
+        self.app["/compile"] = Raw(*args, **kwargs)
+        self.app["/input"] = Input(*args, **kwargs)
+
+    def __call__(self, environ, start_response):
+        return self.app(environ, start_response)

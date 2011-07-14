@@ -15,7 +15,9 @@ setup(
     package_dir = {"": "src"},
     namespace_packages = ["pwt"],
 
-    install_requires = ["setuptools"],
+    install_requires = ["setuptools",
+                        "Paste",
+                        ],
 
     extras_require = {
         "test": [
