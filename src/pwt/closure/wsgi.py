@@ -1,5 +1,6 @@
 import json
 import os
+import urlparse
 import sys
 
 import webob.dec
@@ -48,21 +49,22 @@ class Input(object):
 class Raw(object):
 
     def __init__(self, paths, default_mode = RAW, inputs = None):
-        self.paths = paths
+        self.paths = [os.path.abspath(path) for path in paths]
         self.default_mode = default_mode
         self.inputs = inputs
 
-    def getHref(self, src, root):
-        return src.GetPath()[len(root):]
+    def getFiles(self, request):
+        base_url = urlparse.urljoin(request.url, "/input/")
 
-    def getFiles(self):
         sources = set()
         for path in self.paths:
             path = os.path.abspath(path)
 
             for jsfile in treescan.ScanTreeForJsFiles(path):
                 src = closurebuilder._PathSource(jsfile)
-                src.href = self.getHref(src, path)
+                src.href = urlparse.urljoin(
+                    base_url,
+                    src.GetPath()[len(path) + 1:]) # remove starting '/'
                 sources.add(src)
 
         tree = depstree.DepsTree(sources)
@@ -83,7 +85,7 @@ class Raw(object):
 
     @webob.dec.wsgify
     def __call__(self, request):
-        files = self.getFiles()
+        files = self.getFiles(request)
         path = "/compile"
         
         output = """(function() {

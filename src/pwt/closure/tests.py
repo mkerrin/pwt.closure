@@ -6,7 +6,7 @@ import wsgi
 
 BODIES = {
     "test1": """(function() {
-    var files = ["/closure/goog/base.js", "/closure/goog/debug/errorhandlerweakdep.js", "/closure/goog/string/string.js", "/closure/goog/useragent/useragent.js", "/closure/goog/object/object.js", "/closure/goog/debug/error.js", "/closure/goog/asserts/asserts.js", "/closure/goog/array/array.js", "/closure/goog/debug/entrypointregistry.js", "/closure/goog/events/eventwrapper.js", "/closure/goog/events/eventtype.js", "/closure/goog/events/browserfeature.js", "/closure/goog/disposable/idisposable.js", "/closure/goog/disposable/disposable.js", "/closure/goog/events/event.js", "/closure/goog/reflect/reflect.js", "/closure/goog/events/browserevent.js", "/closure/goog/events/listener.js", "/closure/goog/useragent/jscript.js", "/closure/goog/structs/simplepool.js", "/closure/goog/events/pools.js", "/closure/goog/events/events.js", "/closure/goog/events/eventtarget.js", "/test1.js"];
+    var files = ["http://localhost/input/closure/goog/base.js", "http://localhost/input/closure/goog/debug/errorhandlerweakdep.js", "http://localhost/input/closure/goog/string/string.js", "http://localhost/input/closure/goog/useragent/useragent.js", "http://localhost/input/closure/goog/object/object.js", "http://localhost/input/closure/goog/debug/error.js", "http://localhost/input/closure/goog/asserts/asserts.js", "http://localhost/input/closure/goog/array/array.js", "http://localhost/input/closure/goog/debug/entrypointregistry.js", "http://localhost/input/closure/goog/events/eventwrapper.js", "http://localhost/input/closure/goog/events/eventtype.js", "http://localhost/input/closure/goog/events/browserfeature.js", "http://localhost/input/closure/goog/disposable/idisposable.js", "http://localhost/input/closure/goog/disposable/disposable.js", "http://localhost/input/closure/goog/events/event.js", "http://localhost/input/closure/goog/reflect/reflect.js", "http://localhost/input/closure/goog/events/browserevent.js", "http://localhost/input/closure/goog/events/listener.js", "http://localhost/input/closure/goog/useragent/jscript.js", "http://localhost/input/closure/goog/structs/simplepool.js", "http://localhost/input/closure/goog/events/pools.js", "http://localhost/input/closure/goog/events/events.js", "http://localhost/input/closure/goog/events/eventtarget.js", "http://localhost/input/test1.js"];
     var path = '/compile';
 
     var scriptEl;
@@ -39,20 +39,34 @@ class WSGICompile(unittest.TestCase):
             os.path.join(
                 os.path.dirname(__file__),
                 "..", "..", "..",
-                "parts", "closure-library", "closure-library"),
+                "parts", "closure-library", "closure-library/"),
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Raw(paths = paths, inputs = inputs))
+
+    def test_getapp(self):
+        # Note that the trailing '/' is removed :-)
+        app = self.get_app("test1.js")
+        self.assertEqual(app.app.paths, [
+            "/home/michael/deri/javascript/pwt.closure/parts/closure-library/closure-library",
+            "/home/michael/deri/javascript/pwt.closure/src/pwt/closure"])
 
     def get_inputApp(self, inputs):
         paths = [
             os.path.join(
                 os.path.dirname(__file__),
                 "..", "..", "..",
-                "parts", "closure-library", "closure-library"),
+                "parts", "closure-library", "closure-library/"),
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Input(paths = paths, inputs = inputs))
+
+    def test_inputApp(self):
+        # Note that the trailing '/' is removed :-)
+        app = self.get_inputApp("test1.js")
+        self.assertEqual(app.app.paths, [
+            "/home/michael/deri/javascript/pwt.closure/parts/closure-library/closure-library",
+            "/home/michael/deri/javascript/pwt.closure/src/pwt/closure"])
 
     def test_compile_raw1(self):
         app = self.get_app(
@@ -80,11 +94,21 @@ class WSGICompile(unittest.TestCase):
             os.path.join(
                 os.path.dirname(__file__),
                 "..", "..", "..",
-                "parts", "closure-library", "closure-library"),
+                "parts", "closure-library", "closure-library/"),
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Combined(
             paths = paths, default_mode = wsgi.RAW, inputs = inputs))
+
+    def test_combinedApp(self):
+        # Note that the trailing '/' is removed :-)
+        app = self.get_combined("test1.js")
+        self.assertEqual(app.app.app[(None, "/compile")].paths, [
+            "/home/michael/deri/javascript/pwt.closure/parts/closure-library/closure-library",
+            "/home/michael/deri/javascript/pwt.closure/src/pwt/closure"])
+        self.assertEqual(app.app.app[(None, "/input")].paths, [
+            "/home/michael/deri/javascript/pwt.closure/parts/closure-library/closure-library",
+            "/home/michael/deri/javascript/pwt.closure/src/pwt/closure"])
 
     def test_combined1(self):
         app = self.get_combined(
