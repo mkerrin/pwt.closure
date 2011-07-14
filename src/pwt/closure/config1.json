@@ -1,0 +1,5 @@
+{
+    "id": "test1",
+    "paths": ".",
+    "inputs": "test1.js"
+}
