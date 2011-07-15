@@ -1,3 +1,4 @@
+import paste.urlmap
 import unittest
 import webtest
 import os.path
@@ -28,7 +29,32 @@ BODIES = {
     for (var i = 0; i < files.length; i++) {
         doc.write('<script type="text/javascript" src="' + files[i] + '"><\/script>');
     }
-}
+})();
+""",
+    "test1_js": """(function() {
+    var files = ["http://localhost/js/input/closure/goog/base.js", "http://localhost/js/input/closure/goog/debug/errorhandlerweakdep.js", "http://localhost/js/input/closure/goog/string/string.js", "http://localhost/js/input/closure/goog/useragent/useragent.js", "http://localhost/js/input/closure/goog/object/object.js", "http://localhost/js/input/closure/goog/debug/error.js", "http://localhost/js/input/closure/goog/asserts/asserts.js", "http://localhost/js/input/closure/goog/array/array.js", "http://localhost/js/input/closure/goog/debug/entrypointregistry.js", "http://localhost/js/input/closure/goog/events/eventwrapper.js", "http://localhost/js/input/closure/goog/events/eventtype.js", "http://localhost/js/input/closure/goog/events/browserfeature.js", "http://localhost/js/input/closure/goog/disposable/idisposable.js", "http://localhost/js/input/closure/goog/disposable/disposable.js", "http://localhost/js/input/closure/goog/events/event.js", "http://localhost/js/input/closure/goog/reflect/reflect.js", "http://localhost/js/input/closure/goog/events/browserevent.js", "http://localhost/js/input/closure/goog/events/listener.js", "http://localhost/js/input/closure/goog/useragent/jscript.js", "http://localhost/js/input/closure/goog/structs/simplepool.js", "http://localhost/js/input/closure/goog/events/pools.js", "http://localhost/js/input/closure/goog/events/events.js", "http://localhost/js/input/closure/goog/events/eventtarget.js", "http://localhost/js/input/test1.js"];
+    var path = '/compile';
+
+    var scriptEl;
+    var doc = document;
+    var scripts = doc.getElementsByTagName('script');
+    for (var i = scripts.length - 1; i >= 0; --i) {
+        var candidateScriptEl = scripts[i];
+        var src = candidateScriptEl.src;
+        if (src.indexOf(path) >= 0) {
+            scriptEl = candidateScriptEl;
+            break;
+        }
+    }
+
+    if (!scriptEl) {
+        return;
+    }
+
+    for (var i = 0; i < files.length; i++) {
+        doc.write('<script type="text/javascript" src="' + files[i] + '"><\/script>');
+    }
+})();
 """
     }
 
@@ -98,7 +124,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Combined(
-            paths = paths, default_mode = wsgi.RAW, inputs = inputs))
+            {}, paths = paths, default_mode = wsgi.RAW, inputs = inputs))
 
     def test_combinedApp(self):
         # Note that the trailing '/' is removed :-)
@@ -136,3 +162,24 @@ class WSGICompile(unittest.TestCase):
         resp = app.get("/input/closure/goog/base.js")
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
+
+    def get_subApp(self, inputs):
+        paths = [
+            os.path.join(
+                os.path.dirname(__file__),
+                "..", "..", "..",
+                "parts", "closure-library", "closure-library/"),
+            os.path.join(os.path.dirname(__file__)),
+            ]
+        urlmap = paste.urlmap.URLMap()
+        urlmap["/js"] = wsgi.Combined(
+            {}, paths = paths, default_mode = wsgi.RAW, inputs = inputs)
+        return webtest.TestApp(urlmap)
+
+    def test_sub_combined1(self):
+        app = self.get_subApp(
+            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
+        resp = app.get("/js/compile")
+        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(resp.content_type, "application/javascript")
+        self.assertEqual(resp.body, BODIES["test1_js"])

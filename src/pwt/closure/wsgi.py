@@ -22,6 +22,22 @@ RAW = "RAW"
 SIMPLE = "SIMPLE"
 ADVANCED = "ADVANCED"
 
+def get_input_arguments(local_conf):
+    paths = local_conf.get("paths", "")
+    if paths:
+        paths = [os.path.abspath(path) for path in paths.split()]
+    else:
+        paths = ()
+
+    inputs = local_conf.get("inputs", "")
+    if inputs:
+        inputs = inputs.split()
+    else:
+        inputs = ()
+
+    return {"paths": paths, "default_mode": RAW, "inputs": inputs}
+
+
 class Input(object):
 
     def __init__(self, paths, default_mode = None, inputs = None):
@@ -54,7 +70,7 @@ class Raw(object):
         self.inputs = inputs
 
     def getFiles(self, request):
-        base_url = urlparse.urljoin(request.url, "/input/")
+        base_url = urlparse.urljoin(request.url, "input/")
 
         sources = set()
         for path in self.paths:
@@ -111,7 +127,7 @@ class Raw(object):
     for (var i = 0; i < files.length; i++) {
         doc.write('<script type="text/javascript" src="' + files[i] + '"><\/script>');
     }
-}
+})();
 """ %(json.dumps(files), path)
         
         return webob.Response(
@@ -120,10 +136,16 @@ class Raw(object):
 
 class Combined(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, global_conf, **local_conf):
         self.app = paste.urlmap.URLMap()
-        self.app["/compile"] = Raw(*args, **kwargs)
-        self.app["/input"] = Input(*args, **kwargs)
+        self.app["/compile"] = Raw(**local_conf)
+        self.app["/input"] = Input(**local_conf)
 
     def __call__(self, environ, start_response):
         return self.app(environ, start_response)
+
+
+def paste_combined_closure(global_conf, **local_conf):
+    conf = get_input_arguments(local_conf)
+
+    return Combined(global_conf, **conf)
