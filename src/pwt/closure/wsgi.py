@@ -22,22 +22,6 @@ RAW = "RAW"
 SIMPLE = "SIMPLE"
 ADVANCED = "ADVANCED"
 
-def get_input_arguments(local_conf):
-    paths = local_conf.get("paths", "")
-    if paths:
-        paths = [os.path.abspath(path) for path in paths.split()]
-    else:
-        paths = ()
-
-    inputs = local_conf.get("inputs", "")
-    if inputs:
-        inputs = inputs.split()
-    else:
-        inputs = ()
-
-    return {"paths": paths, "default_mode": RAW, "inputs": inputs}
-
-
 class Input(object):
 
     def __init__(self, paths, default_mode = None, inputs = None):
@@ -144,6 +128,21 @@ class Combined(object):
     def __call__(self, environ, start_response):
         return self.app(environ, start_response)
 
+
+def get_input_arguments(local_conf):
+    paths = local_conf.get("paths", "")
+    if paths:
+        paths = [os.path.abspath(path) for path in paths.split()]
+    else:
+        paths = ()
+
+    inputs = local_conf.get("inputs", "")
+    if inputs:
+        inputs = inputs.split()
+    else:
+        inputs = ()
+
+    return {"paths": paths, "default_mode": RAW, "inputs": inputs}
 
 def paste_combined_closure(global_conf, **local_conf):
     conf = get_input_arguments(local_conf)
