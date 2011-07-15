@@ -15,9 +15,11 @@ setup(
     package_dir = {"": "src"},
     namespace_packages = ["pwt"],
 
-    install_requires = ["setuptools",
-                        "Paste",
-                        ],
+    install_requires = [
+        "setuptools",
+        "WebOb",
+        "Paste",
+        ],
 
     extras_require = {
         "test": [

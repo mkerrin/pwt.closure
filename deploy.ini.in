@@ -1,0 +1,23 @@
+[server:main]
+use = egg:Paste#http
+host = 0.0.0.0
+port = 8000
+
+[composite:main]
+use = egg:Paste#urlmap
+
+/ = home
+/js = js
+
+[app:home]
+use = egg:Paste#static
+document_root = ${buildout:directory}/src/pwt/closure
+
+[app:js]
+paste.app_factory = pwt.closure.wsgi:paste_combined_closure
+
+paths =
+    ${closure-library:location}/closure-library
+    ${buildout:directory}/src/pwt/closure
+
+inputs = src/pwt/closure/test1.js
