@@ -124,7 +124,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Combined(
-            {}, paths = paths, default_mode = wsgi.RAW, inputs = inputs))
+            paths = paths, default_mode = wsgi.RAW, inputs = inputs))
 
     def test_combinedApp(self):
         # Note that the trailing '/' is removed :-)
@@ -173,7 +173,7 @@ class WSGICompile(unittest.TestCase):
             ]
         urlmap = paste.urlmap.URLMap()
         urlmap["/js"] = wsgi.Combined(
-            {}, paths = paths, default_mode = wsgi.RAW, inputs = inputs)
+            paths = paths, default_mode = wsgi.RAW, inputs = inputs)
         return webtest.TestApp(urlmap)
 
     def test_sub_combined1(self):
@@ -183,3 +183,23 @@ class WSGICompile(unittest.TestCase):
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
         self.assertEqual(resp.body, BODIES["test1_js"])
+
+    def get_compileApp(self, inputs):
+        paths = [
+            os.path.join(
+                os.path.dirname(__file__),
+                "..", "..", "..",
+                "parts", "closure-library", "closure-library/"),
+            os.path.join(os.path.dirname(__file__)),
+            ]
+        app = wsgi.Compile(
+            paths = paths, default_mode = wsgi.RAW, inputs = inputs)
+        return webtest.TestApp(app)
+
+    def test_compile1(self):
+        app = self.get_compileApp(
+            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
+        resp = app.get("/")
+        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(resp.content_type, "application/javascript")
+        self.assert_(resp.content_length > 0)

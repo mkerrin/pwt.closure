@@ -53,7 +53,7 @@ class Raw(object):
         self.default_mode = default_mode
         self.inputs = inputs
 
-    def getFiles(self, request):
+    def getDeps(self, request):
         base_url = urlparse.urljoin(request.url, "input/")
 
         sources = set()
@@ -79,13 +79,11 @@ class Raw(object):
         base = closurebuilder._GetClosureBaseFile(sources)
         deps = [base] + tree.GetDependencies(input_namespaces)
 
-        files = [js_source.href for js_source in deps]
-
-        return files
+        return deps
 
     @webob.dec.wsgify
     def __call__(self, request):
-        files = self.getFiles(request)
+        deps = self.getDeps(request)
         path = "/compile"
         
         output = """(function() {
@@ -112,15 +110,36 @@ class Raw(object):
         doc.write('<script type="text/javascript" src="' + files[i] + '"><\/script>');
     }
 })();
-""" %(json.dumps(files), path)
+""" %(json.dumps([js_source.href for js_source in deps]), path)
         
+        return webob.Response(
+            body = output, content_type = "application/javascript")
+
+
+class Compile(Raw):
+
+    def __init__(self, paths, default_mode = None, inputs = None):
+        super(Compile, self).__init__(paths, default_mode, inputs)
+
+        self.compiler_jar = "/home/michael/deri/javascript/closure-compiler-read-only/build/compiler.jar"
+        self.compiler_flags = []
+
+    @webob.dec.wsgify
+    def __call__(self, request):
+        deps = self.getDeps(request)
+
+        output = jscompiler.Compile(
+            self.compiler_jar,
+            [src.GetPath() for src in deps],
+            self.compiler_flags)
+
         return webob.Response(
             body = output, content_type = "application/javascript")
 
 
 class Combined(object):
 
-    def __init__(self, global_conf, **local_conf):
+    def __init__(self, **local_conf):
         self.app = paste.urlmap.URLMap()
         self.app["/compile"] = Raw(**local_conf)
         self.app["/input"] = Input(**local_conf)
@@ -147,4 +166,4 @@ def get_input_arguments(local_conf):
 def paste_combined_closure(global_conf, **local_conf):
     conf = get_input_arguments(local_conf)
 
-    return Combined(global_conf, **conf)
+    return Combined(**conf)
