@@ -124,7 +124,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Combined(
-            paths = paths, default_mode = wsgi.RAW, inputs = inputs))
+            paths = paths, inputs = inputs))
 
     def test_combinedApp(self):
         # Note that the trailing '/' is removed :-)
@@ -172,8 +172,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         urlmap = paste.urlmap.URLMap()
-        urlmap["/js"] = wsgi.Combined(
-            paths = paths, default_mode = wsgi.RAW, inputs = inputs)
+        urlmap["/js"] = wsgi.Combined(paths = paths, inputs = inputs)
         return webtest.TestApp(urlmap)
 
     def test_sub_combined1(self):
@@ -193,7 +192,8 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         app = wsgi.Compile(
-            paths = paths, default_mode = wsgi.RAW, inputs = inputs)
+            paths = paths, inputs = inputs,
+            compiler_jar = "/home/michael/deri/javascript/closure-compiler-read-only/build/compiler.jar")
         return webtest.TestApp(app)
 
     def test_compile1(self):

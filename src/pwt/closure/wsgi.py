@@ -24,7 +24,7 @@ ADVANCED = "ADVANCED"
 
 class Input(object):
 
-    def __init__(self, paths, default_mode = None, inputs = None):
+    def __init__(self, paths, inputs = None, **kwargs):
         self.paths = [os.path.abspath(path) for path in paths]
 
     @webob.dec.wsgify
@@ -48,9 +48,8 @@ class Input(object):
 
 class Raw(object):
 
-    def __init__(self, paths, default_mode = RAW, inputs = None):
+    def __init__(self, paths, inputs = None, **kwargs):
         self.paths = [os.path.abspath(path) for path in paths]
-        self.default_mode = default_mode
         self.inputs = inputs
 
     def getDeps(self, request):
@@ -85,7 +84,9 @@ class Raw(object):
     def __call__(self, request):
         deps = self.getDeps(request)
         path = "/compile"
-        
+
+        # Simple small Java Script snippet that checks to see if it is included
+        # on this page and then inserts all the dependencies on the inputs.
         output = """(function() {
     var files = %s;
     var path = '%s';
@@ -118,11 +119,11 @@ class Raw(object):
 
 class Compile(Raw):
 
-    def __init__(self, paths, default_mode = None, inputs = None):
-        super(Compile, self).__init__(paths, default_mode, inputs)
+    def __init__(self, paths, inputs = None, compiler_jar = None, compiler_flags = []):
+        super(Compile, self).__init__(paths, inputs)
 
-        self.compiler_jar = "/home/michael/deri/javascript/closure-compiler-read-only/build/compiler.jar"
-        self.compiler_flags = []
+        self.compiler_jar = compiler_jar
+        self.compiler_flags = compiler_flags
 
     @webob.dec.wsgify
     def __call__(self, request):
@@ -154,14 +155,16 @@ def get_input_arguments(local_conf):
         paths = [os.path.abspath(path) for path in paths.split()]
     else:
         paths = ()
+    local_conf["paths"] = paths
 
     inputs = local_conf.get("inputs", "")
     if inputs:
         inputs = inputs.split()
     else:
         inputs = ()
+    local_conf["inputs"] = inputs
 
-    return {"paths": paths, "default_mode": RAW, "inputs": inputs}
+    return local_conf
 
 def paste_combined_closure(global_conf, **local_conf):
     conf = get_input_arguments(local_conf)
