@@ -4,10 +4,11 @@ import webtest
 import os.path
 
 import wsgi
+import files
 
 BODIES = {
     "test1": """(function() {
-    var files = ["http://localhost/input/closure/goog/base.js", "http://localhost/input/closure/goog/debug/errorhandlerweakdep.js", "http://localhost/input/closure/goog/string/string.js", "http://localhost/input/closure/goog/useragent/useragent.js", "http://localhost/input/closure/goog/object/object.js", "http://localhost/input/closure/goog/debug/error.js", "http://localhost/input/closure/goog/asserts/asserts.js", "http://localhost/input/closure/goog/array/array.js", "http://localhost/input/closure/goog/debug/entrypointregistry.js", "http://localhost/input/closure/goog/events/eventwrapper.js", "http://localhost/input/closure/goog/events/eventtype.js", "http://localhost/input/closure/goog/events/browserfeature.js", "http://localhost/input/closure/goog/disposable/idisposable.js", "http://localhost/input/closure/goog/disposable/disposable.js", "http://localhost/input/closure/goog/events/event.js", "http://localhost/input/closure/goog/reflect/reflect.js", "http://localhost/input/closure/goog/events/browserevent.js", "http://localhost/input/closure/goog/events/listener.js", "http://localhost/input/closure/goog/useragent/jscript.js", "http://localhost/input/closure/goog/structs/simplepool.js", "http://localhost/input/closure/goog/events/pools.js", "http://localhost/input/closure/goog/events/events.js", "http://localhost/input/closure/goog/events/eventtarget.js", "http://localhost/input/test1.js"];
+    var files = ["http://localhost/input/closure/goog/base.js", "http://localhost/input/closure/goog/string/string.js", "http://localhost/input/closure/goog/useragent/jscript.js", "http://localhost/input/closure/goog/string/stringbuffer.js", "http://localhost/input/closure/goog/i18n/bidi.js", "http://localhost/input/closure/goog/debug/error.js", "http://localhost/input/closure/goog/asserts/asserts.js", "http://localhost/input/closure/goog/array/array.js", "http://localhost/input/closure/goog/dom/classes.js", "http://localhost/input/closure/goog/object/object.js", "http://localhost/input/closure/goog/dom/tagname.js", "http://localhost/input/closure/goog/useragent/useragent.js", "http://localhost/input/closure/goog/math/size.js", "http://localhost/input/closure/goog/dom/browserfeature.js", "http://localhost/input/closure/goog/math/coordinate.js", "http://localhost/input/closure/goog/dom/dom.js", "http://localhost/input/closure/goog/structs/inversionmap.js", "http://localhost/input/closure/goog/i18n/graphemebreak.js", "http://localhost/input/closure/goog/format/format.js", "http://localhost/input/closure/goog/i18n/bidiformatter.js", "http://localhost/input/soyutils_usegoog.js", "http://localhost/input/test1.soy", "http://localhost/input/closure/goog/debug/errorhandlerweakdep.js", "http://localhost/input/closure/goog/debug/entrypointregistry.js", "http://localhost/input/closure/goog/events/eventwrapper.js", "http://localhost/input/closure/goog/events/eventtype.js", "http://localhost/input/closure/goog/events/browserfeature.js", "http://localhost/input/closure/goog/disposable/idisposable.js", "http://localhost/input/closure/goog/disposable/disposable.js", "http://localhost/input/closure/goog/events/event.js", "http://localhost/input/closure/goog/reflect/reflect.js", "http://localhost/input/closure/goog/events/browserevent.js", "http://localhost/input/closure/goog/events/listener.js", "http://localhost/input/closure/goog/structs/simplepool.js", "http://localhost/input/closure/goog/events/pools.js", "http://localhost/input/closure/goog/events/events.js", "http://localhost/input/closure/goog/events/eventtarget.js", "http://localhost/input/test1.js"];
     var path = '/compile';
 
     var scriptEl;
@@ -32,7 +33,7 @@ BODIES = {
 })();
 """,
     "test1_js": """(function() {
-    var files = ["http://localhost/js/input/closure/goog/base.js", "http://localhost/js/input/closure/goog/debug/errorhandlerweakdep.js", "http://localhost/js/input/closure/goog/string/string.js", "http://localhost/js/input/closure/goog/useragent/useragent.js", "http://localhost/js/input/closure/goog/object/object.js", "http://localhost/js/input/closure/goog/debug/error.js", "http://localhost/js/input/closure/goog/asserts/asserts.js", "http://localhost/js/input/closure/goog/array/array.js", "http://localhost/js/input/closure/goog/debug/entrypointregistry.js", "http://localhost/js/input/closure/goog/events/eventwrapper.js", "http://localhost/js/input/closure/goog/events/eventtype.js", "http://localhost/js/input/closure/goog/events/browserfeature.js", "http://localhost/js/input/closure/goog/disposable/idisposable.js", "http://localhost/js/input/closure/goog/disposable/disposable.js", "http://localhost/js/input/closure/goog/events/event.js", "http://localhost/js/input/closure/goog/reflect/reflect.js", "http://localhost/js/input/closure/goog/events/browserevent.js", "http://localhost/js/input/closure/goog/events/listener.js", "http://localhost/js/input/closure/goog/useragent/jscript.js", "http://localhost/js/input/closure/goog/structs/simplepool.js", "http://localhost/js/input/closure/goog/events/pools.js", "http://localhost/js/input/closure/goog/events/events.js", "http://localhost/js/input/closure/goog/events/eventtarget.js", "http://localhost/js/input/test1.js"];
+    var files = ["http://localhost/js/input/closure/goog/base.js", "http://localhost/js/input/closure/goog/string/string.js", "http://localhost/js/input/closure/goog/useragent/jscript.js", "http://localhost/js/input/closure/goog/string/stringbuffer.js", "http://localhost/js/input/closure/goog/i18n/bidi.js", "http://localhost/js/input/closure/goog/debug/error.js", "http://localhost/js/input/closure/goog/asserts/asserts.js", "http://localhost/js/input/closure/goog/array/array.js", "http://localhost/js/input/closure/goog/dom/classes.js", "http://localhost/js/input/closure/goog/object/object.js", "http://localhost/js/input/closure/goog/dom/tagname.js", "http://localhost/js/input/closure/goog/useragent/useragent.js", "http://localhost/js/input/closure/goog/math/size.js", "http://localhost/js/input/closure/goog/dom/browserfeature.js", "http://localhost/js/input/closure/goog/math/coordinate.js", "http://localhost/js/input/closure/goog/dom/dom.js", "http://localhost/js/input/closure/goog/structs/inversionmap.js", "http://localhost/js/input/closure/goog/i18n/graphemebreak.js", "http://localhost/js/input/closure/goog/format/format.js", "http://localhost/js/input/closure/goog/i18n/bidiformatter.js", "http://localhost/js/input/soyutils_usegoog.js", "http://localhost/js/input/test1.soy", "http://localhost/js/input/closure/goog/debug/errorhandlerweakdep.js", "http://localhost/js/input/closure/goog/debug/entrypointregistry.js", "http://localhost/js/input/closure/goog/events/eventwrapper.js", "http://localhost/js/input/closure/goog/events/eventtype.js", "http://localhost/js/input/closure/goog/events/browserfeature.js", "http://localhost/js/input/closure/goog/disposable/idisposable.js", "http://localhost/js/input/closure/goog/disposable/disposable.js", "http://localhost/js/input/closure/goog/events/event.js", "http://localhost/js/input/closure/goog/reflect/reflect.js", "http://localhost/js/input/closure/goog/events/browserevent.js", "http://localhost/js/input/closure/goog/events/listener.js", "http://localhost/js/input/closure/goog/structs/simplepool.js", "http://localhost/js/input/closure/goog/events/pools.js", "http://localhost/js/input/closure/goog/events/events.js", "http://localhost/js/input/closure/goog/events/eventtarget.js", "http://localhost/js/input/test1.js"];
     var path = '/compile';
 
     var scriptEl;
@@ -58,6 +59,11 @@ BODIES = {
 """
     }
 
+DEFAULT_COMPILER_JAR = os.path.join(
+    os.path.dirname(__file__),
+    "jars",
+    "compiler.jar")
+
 class WSGICompile(unittest.TestCase):
 
     def get_app(self, inputs):
@@ -68,14 +74,8 @@ class WSGICompile(unittest.TestCase):
                 "parts", "closure-library", "closure-library/"),
             os.path.join(os.path.dirname(__file__)),
             ]
-        return webtest.TestApp(wsgi.Raw(paths = paths, inputs = inputs))
-
-    def test_getapp(self):
-        # Note that the trailing '/' is removed :-)
-        app = self.get_app("test1.js")
-        self.assertEqual(app.app.paths, [
-            "/home/michael/deri/javascript/pwt.closure/parts/closure-library/closure-library",
-            "/home/michael/deri/javascript/pwt.closure/src/pwt/closure"])
+        return webtest.TestApp(
+            wsgi.Raw(files = files.Tree(paths), inputs = inputs))
 
     def get_inputApp(self, inputs):
         paths = [
@@ -85,14 +85,14 @@ class WSGICompile(unittest.TestCase):
                 "parts", "closure-library", "closure-library/"),
             os.path.join(os.path.dirname(__file__)),
             ]
-        return webtest.TestApp(wsgi.Input(paths = paths, inputs = inputs))
+        return webtest.TestApp(
+            wsgi.Input(files = files.Tree(paths), inputs = inputs))
 
-    def test_inputApp(self):
-        # Note that the trailing '/' is removed :-)
-        app = self.get_inputApp("test1.js")
-        self.assertEqual(app.app.paths, [
-            "/home/michael/deri/javascript/pwt.closure/parts/closure-library/closure-library",
-            "/home/michael/deri/javascript/pwt.closure/src/pwt/closure"])
+    def test_secure_input_app(self):
+        app = self.get_inputApp(
+            [os.path.join(os.path.dirname(__file__), "test1.js")])
+        resp = app.get("/etc/password", expect_errors = True)
+        self.assertEqual(resp.status_int, 404)
 
     def test_compile_raw1(self):
         app = self.get_app(
@@ -124,17 +124,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Combined(
-            paths = paths, inputs = inputs))
-
-    def test_combinedApp(self):
-        # Note that the trailing '/' is removed :-)
-        app = self.get_combined("test1.js")
-        self.assertEqual(app.app.app[(None, "/compile")].paths, [
-            "/home/michael/deri/javascript/pwt.closure/parts/closure-library/closure-library",
-            "/home/michael/deri/javascript/pwt.closure/src/pwt/closure"])
-        self.assertEqual(app.app.app[(None, "/input")].paths, [
-            "/home/michael/deri/javascript/pwt.closure/parts/closure-library/closure-library",
-            "/home/michael/deri/javascript/pwt.closure/src/pwt/closure"])
+            files = files.Tree(paths), inputs = inputs))
 
     def test_combined1(self):
         app = self.get_combined(
@@ -172,7 +162,8 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         urlmap = paste.urlmap.URLMap()
-        urlmap["/js"] = wsgi.Combined(paths = paths, inputs = inputs)
+        urlmap["/js"] = wsgi.Combined(
+            files = files.Tree(paths), inputs = inputs)
         return webtest.TestApp(urlmap)
 
     def test_sub_combined1(self):
@@ -192,8 +183,8 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         app = wsgi.Compile(
-            paths = paths, inputs = inputs,
-            compiler_jar = "/home/michael/deri/javascript/closure-compiler-read-only/build/compiler.jar")
+            files = files.Tree(paths), inputs = inputs,
+            compiler_jar = DEFAULT_COMPILER_JAR)
         return webtest.TestApp(app)
 
     def test_compile1(self):

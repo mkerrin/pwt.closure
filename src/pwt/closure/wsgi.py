@@ -22,68 +22,49 @@ RAW = "RAW"
 SIMPLE = "SIMPLE"
 ADVANCED = "ADVANCED"
 
+import files
+
 class Input(object):
 
-    def __init__(self, paths, inputs = None, **kwargs):
-        self.paths = [os.path.abspath(path) for path in paths]
+    def __init__(self, files, **kwargs):
+        self.files = files
 
     @webob.dec.wsgify
     def __call__(self, request):
-        path_info = request.path_info[1:] # remove '/'
-        for path in self.paths:
-            abspath = os.path.join(path, path_info)
-            if os.path.isfile(abspath):
-                output = open(abspath).read()
-                status = 200
-                break
-        else:
-            output = ""
+        try:
+            src = self.files.getSource(request.path_info)
+        except KeyError:
             status = 404
+            content_type = None
+            output = ""
+        else:
+            status = 200
+            content_type = "application/javascript"
+            output = src.GetSource()
 
         return webob.Response(
             body = output,
             status = status,
-            content_type = "application/javascript")
+            content_type = content_type)
 
 
 class Raw(object):
 
-    def __init__(self, paths, inputs = None, **kwargs):
-        self.paths = [os.path.abspath(path) for path in paths]
+    def __init__(self, files, inputs = None, **kwargs):
+        self.files = files
         self.inputs = inputs
-
-    def getDeps(self, request):
-        base_url = urlparse.urljoin(request.url, "input/")
-
-        sources = set()
-        for path in self.paths:
-            path = os.path.abspath(path)
-
-            for jsfile in treescan.ScanTreeForJsFiles(path):
-                src = closurebuilder._PathSource(jsfile)
-                src.href = urlparse.urljoin(
-                    base_url,
-                    src.GetPath()[len(path) + 1:]) # remove starting '/'
-                sources.add(src)
-
-        tree = depstree.DepsTree(sources)
-
-        input_namespaces = set()
-        for input_path in self.inputs:
-            js_input = closurebuilder._PathSource(input_path)
-            input_namespaces.update(js_input.provides)
-        if not input_namespaces:
-            raise ValueError("")
-
-        base = closurebuilder._GetClosureBaseFile(sources)
-        deps = [base] + tree.GetDependencies(input_namespaces)
-
-        return deps
 
     @webob.dec.wsgify
     def __call__(self, request):
-        deps = self.getDeps(request)
+        deps = self.files.getDeps(self.inputs)
         path = "/compile"
+
+        base_url = urlparse.urljoin(request.url, "input/")
+        # remove starting '/'
+        files = [
+            urlparse.urljoin(base_url, js_source.path_info[1:])
+            for js_source in deps
+            ]
 
         # Simple small Java Script snippet that checks to see if it is included
         # on this page and then inserts all the dependencies on the inputs.
@@ -111,7 +92,7 @@ class Raw(object):
         doc.write('<script type="text/javascript" src="' + files[i] + '"><\/script>');
     }
 })();
-""" %(json.dumps([js_source.href for js_source in deps]), path)
+""" %(json.dumps(files), path)
         
         return webob.Response(
             body = output, content_type = "application/javascript")
@@ -119,15 +100,15 @@ class Raw(object):
 
 class Compile(Raw):
 
-    def __init__(self, paths, inputs = None, compiler_jar = None, compiler_flags = []):
-        super(Compile, self).__init__(paths, inputs)
+    def __init__(self, files, inputs = None, compiler_jar = None, compiler_flags = []):
+        super(Compile, self).__init__(files, inputs)
 
         self.compiler_jar = compiler_jar
         self.compiler_flags = compiler_flags
 
     @webob.dec.wsgify
     def __call__(self, request):
-        deps = self.getDeps(request)
+        deps = self.files.getDeps(self.inputs)
 
         output = jscompiler.Compile(
             self.compiler_jar,
@@ -150,12 +131,7 @@ class Combined(object):
 
 
 def get_input_arguments(local_conf):
-    paths = local_conf.get("paths", "")
-    if paths:
-        paths = [os.path.abspath(path) for path in paths.split()]
-    else:
-        paths = ()
-    local_conf["paths"] = paths
+    local_conf["files"] = files.Tree(local_conf["paths"])
 
     inputs = local_conf.get("inputs", "")
     if inputs:
