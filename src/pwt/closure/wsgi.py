@@ -9,11 +9,6 @@ import paste.urlmap
 # Import the depswrite and source from closure-library checkout
 old_path = sys.path
 sys.path.append(os.path.join(os.path.dirname(__file__), "build"))
-import depswriter
-import depstree
-import source
-import treescan
-import closurebuilder
 import jscompiler
 # reset the path
 sys.path = sys.path[:-1]
