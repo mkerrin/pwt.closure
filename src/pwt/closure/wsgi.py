@@ -88,7 +88,7 @@ class Raw(object):
     }
 })();
 """ %(json.dumps(files), path)
-        
+
         return webob.Response(
             body = output, content_type = "application/javascript")
 
@@ -126,7 +126,7 @@ class Combined(object):
 
 
 def get_input_arguments(local_conf):
-    local_conf["files"] = files.Tree(local_conf["paths"])
+    local_conf["files"] = files.Tree(local_conf["paths"].split())
 
     inputs = local_conf.get("inputs", "")
     if inputs:

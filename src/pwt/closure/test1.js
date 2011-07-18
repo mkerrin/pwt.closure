@@ -4,4 +4,4 @@ goog.require('testapp')
 
 goog.require('goog.events.EventTarget');
 
-var eventTarget = new goog.events.EventTarget();
+soy.renderElement(goog.dom.getElement('output'), testapp.hello);
