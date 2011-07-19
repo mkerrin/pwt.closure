@@ -1,17 +1,9 @@
 import json
 import os
 import urlparse
-import sys
 
 import webob.dec
 import paste.urlmap
-
-# Import the depswrite and source from closure-library checkout
-old_path = sys.path
-sys.path.append(os.path.join(os.path.dirname(__file__), "build"))
-import jscompiler
-# reset the path
-sys.path = sys.path[:-1]
 
 RAW = "RAW"
 SIMPLE = "SIMPLE"
@@ -103,12 +95,8 @@ class Compile(Raw):
 
     @webob.dec.wsgify
     def __call__(self, request):
-        deps = self.files.getDeps(self.inputs)
-
-        output = jscompiler.Compile(
-            self.compiler_jar,
-            [src.GetPath() for src in deps],
-            self.compiler_flags)
+        output = self.files.getCompiledSource(
+            self.inputs, self.compiler_jar, self.compiler_flags)
 
         return webob.Response(
             body = output, content_type = "application/javascript")
