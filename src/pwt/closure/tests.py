@@ -36,6 +36,35 @@ BODIES = {
     }
 })();
 """,
+
+    "test2": """(function() {
+    CLOSURE_NO_DEPS = true;
+
+    var files = ["http://localhost/input/closure/goog/base.js", "http://localhost/input/closure/goog/string/string.js", "http://localhost/input/closure/goog/useragent/jscript.js", "http://localhost/input/closure/goog/string/stringbuffer.js", "http://localhost/input/closure/goog/i18n/bidi.js", "http://localhost/input/closure/goog/debug/error.js", "http://localhost/input/closure/goog/asserts/asserts.js", "http://localhost/input/closure/goog/array/array.js", "http://localhost/input/closure/goog/dom/classes.js", "http://localhost/input/closure/goog/object/object.js", "http://localhost/input/closure/goog/dom/tagname.js", "http://localhost/input/closure/goog/useragent/useragent.js", "http://localhost/input/closure/goog/math/size.js", "http://localhost/input/closure/goog/dom/browserfeature.js", "http://localhost/input/closure/goog/math/coordinate.js", "http://localhost/input/closure/goog/dom/dom.js", "http://localhost/input/closure/goog/structs/inversionmap.js", "http://localhost/input/closure/goog/i18n/graphemebreak.js", "http://localhost/input/closure/goog/format/format.js", "http://localhost/input/closure/goog/i18n/bidiformatter.js", "http://localhost/input/soyutils_usegoog.js", "http://localhost/input/test1.soy", "http://localhost/input/test2.js", "http://localhost/input/test1.js"];
+    var path = '/compile';
+
+    var scriptEl;
+    var doc = document;
+    var scripts = doc.getElementsByTagName('script');
+    for (var i = scripts.length - 1; i >= 0; --i) {
+        var candidateScriptEl = scripts[i];
+        var src = candidateScriptEl.src;
+        if (src.indexOf(path) >= 0) {
+            scriptEl = candidateScriptEl;
+            break;
+        }
+    }
+
+    if (!scriptEl) {
+        return;
+    }
+
+    for (var i = 0; i < files.length; i++) {
+        doc.write('<script type="text/javascript" src="' + files[i] + '"><\/script>');
+    }
+})();
+""",
+
     "test1_js": """(function() {
     CLOSURE_NO_DEPS = true;
 
@@ -108,6 +137,15 @@ class WSGICompile(unittest.TestCase):
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
         self.assertEqual(resp.body, BODIES["test1"])
+
+    def test_compile_raw2(self):
+        app = self.get_app(
+            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")]
+            )
+        resp = app.get("/?input=test1.js&input=test2.js")
+        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(resp.content_type, "application/javascript")
+        self.assertEqual(resp.body, BODIES["test2"])
 
     def test_input1(self):
         app = self.get_inputApp(None)
@@ -201,6 +239,14 @@ class WSGICompile(unittest.TestCase):
         self.assertEqual(resp.content_type, "application/javascript")
         self.assert_(resp.content_length > 0)
 
+    def test_compile2(self):
+        app = self.get_compileApp(
+            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
+        resp = app.get("/?input=test1.js&input=test2.js")
+        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(resp.content_type, "application/javascript")
+        self.assert_(resp.content_length > 0)
+
 
 class TestFiles(unittest.TestCase):
 
@@ -235,6 +281,16 @@ class TestFiles(unittest.TestCase):
         self.assertEqual(
             [d.GetPath() for d in deps],
             ["%s/base.js" % self.root1, "%s/app.js" % self.root1])
+
+    def test_deps3(self):
+        filename = self.writefile1("app.js", """goog.provide('app');\n""")
+        tree = files.Tree([self.root1])
+        deps = tree.getDeps(["app.js"])
+        self.assertEqual(len(deps), 2)
+        self.assertEqual(
+            [d.GetPath() for d in deps],
+            ["%s/base.js" % self.root1, "%s/app.js" % self.root1])
+
 
     def test_source1(self):
         filename = self.writefile1("app.js", """goog.provide('app');\n""")

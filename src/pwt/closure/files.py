@@ -71,9 +71,8 @@ def get_output_filename(output_format, filename):
 class Tree(object):
 
     def __init__(self, roots):
-        self._get_files(roots)
+        self.roots = roots
 
-    def _get_files(self, roots):
         sources = set()
         path_info = {}
         basefile = None
@@ -148,7 +147,14 @@ class Tree(object):
     def getDeps(self, inputs):
         input_namespaces = set()
         for input_path in inputs:
-            js_input = source.Source(source.GetFileContents(input_path))
+            src = None
+            try:
+                js_input = source.Source(source.GetFileContents(input_path))
+            except IOError:
+                # All path_info attributes start with a slash. So put in
+                # the slash to make sure we find the file
+                js_input = self.getSource(os.path.join("/", input_path))
+            
             input_namespaces.update(js_input.provides)
         if not input_namespaces:
             raise ValueError("Input namespaces must be specified")

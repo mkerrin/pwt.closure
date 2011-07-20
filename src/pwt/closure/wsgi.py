@@ -43,7 +43,8 @@ class Raw(object):
 
     @webob.dec.wsgify
     def __call__(self, request):
-        deps = self.files.getDeps(self.inputs)
+        inputs = request.GET.getall("input") or self.inputs
+        deps = self.files.getDeps(inputs)
         path = "/compile"
 
         base_url = urlparse.urljoin(request.url, "input/")
@@ -97,8 +98,9 @@ class Compile(Raw):
 
     @webob.dec.wsgify
     def __call__(self, request):
+        inputs = request.GET.getall("input") or self.inputs
         output = self.files.getCompiledSource(
-            self.inputs, self.compiler_jar, self.compiler_flags)
+            inputs, self.compiler_jar, self.compiler_flags)
 
         return webob.Response(
             body = output, content_type = "application/javascript")
