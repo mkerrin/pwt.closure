@@ -29,7 +29,10 @@ setup(
 
     entry_points = {
         "paste.app_factory": [
-            "main=pwt.closure.wsgi:paste_combined_closure",
+            "main = pwt.closure.wsgi:paste_combined_closure",
+            ],
+        "console_scripts": [
+            "closurebuilder = pwt.closure.cli:main",
             ],
         },
 
