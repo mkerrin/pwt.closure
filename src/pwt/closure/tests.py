@@ -1,7 +1,9 @@
+import os.path
 import paste.urlmap
+import shutil
+import tempfile
 import unittest
 import webtest
-import os.path
 
 import wsgi
 import files
@@ -194,3 +196,44 @@ class WSGICompile(unittest.TestCase):
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
         self.assert_(resp.content_length > 0)
+
+
+class TestFiles(unittest.TestCase):
+
+    def setUp(self):
+        self.root1 = tempfile.mkdtemp()
+        # 
+        self.writefile1("base.js", "goog.provide('goog');\n")
+
+    def tearDown(self):
+        shutil.rmtree(self.root1)
+
+    def writefile1(self, name, contents):
+        filename = os.path.join(self.root1, name)
+        open(filename, "w").write(contents)
+        return filename
+
+    def test_tree1(self):
+        tree = files.Tree([self.root1])
+        info = dict(
+            [(key, val.GetPath()) for key, val in tree.path_info.items()])
+        self.assertEqual(info, {"/base.js": "%s/base.js" % self.root1})
+
+    def test_deps1(self):
+        tree = files.Tree([self.root1])
+        self.assertRaises(ValueError, tree.getDeps, "")
+
+    def test_deps2(self):
+        filename = self.writefile1("app.js", """goog.provide('app');\n""")
+        tree = files.Tree([self.root1])
+        deps = tree.getDeps([filename])
+        self.assertEqual(len(deps), 2)
+        self.assertEqual(
+            [d.GetPath() for d in deps],
+            ["%s/base.js" % self.root1, "%s/app.js" % self.root1])
+
+    def test_source1(self):
+        filename = self.writefile1("app.js", """goog.provide('app');\n""")
+        tree = files.Tree([self.root1])
+        src = tree.getSource("/base.js")
+        self.assertEqual(src.GetSource(), "goog.provide('goog');\n")
