@@ -7,6 +7,8 @@ import subprocess
 import sys
 import tempfile
 
+import paste.reloader
+
 # Import the depswrite and source from closure-library checkout
 old_path = sys.path
 sys.path.append(os.path.join(os.path.dirname(__file__), "build"))
@@ -99,6 +101,12 @@ class Tree(object):
                 path_info[path] = src
                 src.path_info = path
 
+                # watch file for changes. This reloads the whole server
+                # compiling any templates that need to changed.
+                # This does nothing if we are not running under the PasteScript
+                # server that stops and reloads whenever any changes are found.
+                paste.reloader.watch_file(jsfile)
+
                 sources.add(src)
 
         if soyes:
@@ -156,6 +164,8 @@ class Tree(object):
         for src in deps:
             path = src.GetPath()
             if path is None:
+                # tp - tempfile that gets cleared out when the pointer goes
+                # out of scope
                 fp = tempfile.NamedTemporaryFile(suffix = ".js")
                 fp.write(src.GetSource())
                 fp.flush()
