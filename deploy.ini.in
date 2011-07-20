@@ -14,7 +14,7 @@ use = egg:Paste#static
 document_root = ${buildout:directory}/src/pwt/closure
 
 [app:js]
-paste.app_factory = pwt.closure.wsgi:paste_combined_closure
+use = egg:pwt.closure#main
 
 paths =
     ${closure-library:location}/closure-library

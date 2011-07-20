@@ -27,6 +27,12 @@ setup(
             ],
         },
 
+    entry_points = {
+        "paste.app_factory": [
+            "main=pwt.closure.wsgi:paste_combined_closure",
+            ],
+        },
+
     include_package_data = True,
     zip_safe = False,
     )
