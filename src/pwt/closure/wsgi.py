@@ -56,6 +56,8 @@ class Raw(object):
         # Simple small Java Script snippet that checks to see if it is included
         # on this page and then inserts all the dependencies on the inputs.
         output = """(function() {
+    CLOSURE_NO_DEPS = true;
+
     var files = %s;
     var path = '%s';
 

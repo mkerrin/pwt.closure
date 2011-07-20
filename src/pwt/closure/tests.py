@@ -10,6 +10,8 @@ import files
 
 BODIES = {
     "test1": """(function() {
+    CLOSURE_NO_DEPS = true;
+
     var files = ["http://localhost/input/closure/goog/base.js", "http://localhost/input/closure/goog/string/string.js", "http://localhost/input/closure/goog/useragent/jscript.js", "http://localhost/input/closure/goog/string/stringbuffer.js", "http://localhost/input/closure/goog/i18n/bidi.js", "http://localhost/input/closure/goog/debug/error.js", "http://localhost/input/closure/goog/asserts/asserts.js", "http://localhost/input/closure/goog/array/array.js", "http://localhost/input/closure/goog/dom/classes.js", "http://localhost/input/closure/goog/object/object.js", "http://localhost/input/closure/goog/dom/tagname.js", "http://localhost/input/closure/goog/useragent/useragent.js", "http://localhost/input/closure/goog/math/size.js", "http://localhost/input/closure/goog/dom/browserfeature.js", "http://localhost/input/closure/goog/math/coordinate.js", "http://localhost/input/closure/goog/dom/dom.js", "http://localhost/input/closure/goog/structs/inversionmap.js", "http://localhost/input/closure/goog/i18n/graphemebreak.js", "http://localhost/input/closure/goog/format/format.js", "http://localhost/input/closure/goog/i18n/bidiformatter.js", "http://localhost/input/soyutils_usegoog.js", "http://localhost/input/test1.soy", "http://localhost/input/test1.js"];
     var path = '/compile';
 
@@ -35,6 +37,8 @@ BODIES = {
 })();
 """,
     "test1_js": """(function() {
+    CLOSURE_NO_DEPS = true;
+
     var files = ["http://localhost/js/input/closure/goog/base.js", "http://localhost/js/input/closure/goog/string/string.js", "http://localhost/js/input/closure/goog/useragent/jscript.js", "http://localhost/js/input/closure/goog/string/stringbuffer.js", "http://localhost/js/input/closure/goog/i18n/bidi.js", "http://localhost/js/input/closure/goog/debug/error.js", "http://localhost/js/input/closure/goog/asserts/asserts.js", "http://localhost/js/input/closure/goog/array/array.js", "http://localhost/js/input/closure/goog/dom/classes.js", "http://localhost/js/input/closure/goog/object/object.js", "http://localhost/js/input/closure/goog/dom/tagname.js", "http://localhost/js/input/closure/goog/useragent/useragent.js", "http://localhost/js/input/closure/goog/math/size.js", "http://localhost/js/input/closure/goog/dom/browserfeature.js", "http://localhost/js/input/closure/goog/math/coordinate.js", "http://localhost/js/input/closure/goog/dom/dom.js", "http://localhost/js/input/closure/goog/structs/inversionmap.js", "http://localhost/js/input/closure/goog/i18n/graphemebreak.js", "http://localhost/js/input/closure/goog/format/format.js", "http://localhost/js/input/closure/goog/i18n/bidiformatter.js", "http://localhost/js/input/soyutils_usegoog.js", "http://localhost/js/input/test1.soy", "http://localhost/js/input/test1.js"];
     var path = '/compile';
 
