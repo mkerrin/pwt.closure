@@ -108,7 +108,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(
-            wsgi.Raw(files = files.Tree(paths, {"inputs": inputs})))
+            wsgi.Raw(files = files.Tree(paths, inputs = inputs)))
 
     def get_inputApp(self, inputs):
         paths = [
@@ -119,27 +119,22 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(
-            wsgi.Input(files = files.Tree(paths, {"inputs": inputs})))
+            wsgi.Input(files = files.Tree(paths, inputs = inputs)))
 
     def test_secure_input_app(self):
-        app = self.get_inputApp(
-            [os.path.join(os.path.dirname(__file__), "test1.js")])
+        app = self.get_inputApp(["test1.js"])
         resp = app.get("/etc/password", expect_errors = True)
         self.assertEqual(resp.status_int, 404)
 
     def test_compile_raw1(self):
-        app = self.get_app(
-            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")]
-            )
+        app = self.get_app(["test1.js"])
         resp = app.get("/")
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
         self.assertEqual(resp.body, BODIES["test1"])
 
     def test_compile_raw2(self):
-        app = self.get_app(
-            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")]
-            )
+        app = self.get_app(["test1.js"])
         resp = app.get("/?input=test1.js&input=test2.js")
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
@@ -166,31 +161,27 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Combined(
-            files = files.Tree(paths, {"inputs": inputs})))
+            files = files.Tree(paths, inputs = inputs)))
 
     def test_combined1(self):
-        app = self.get_combined(
-            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
+        app = self.get_combined(["test1.js"])
         resp = app.get("/", expect_errors = True)
         self.assertEqual(resp.status_int, 404)
 
     def test_combined2(self):
-        app = self.get_combined(
-            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
+        app = self.get_combined(["test1.js"])
         resp = app.get("/compile")
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
         self.assertEqual(resp.body, BODIES["test1"])
 
     def test_combined3(self):
-        app = self.get_combined(
-            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
+        app = self.get_combined(["test1.js"])
         resp = app.get("/input", expect_errors = True)
         self.assertEqual(resp.status_int, 404)
 
     def test_combined3(self):
-        app = self.get_combined(
-            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
+        app = self.get_combined(["test1.js"])
         resp = app.get("/input/closure/goog/base.js")
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
@@ -205,12 +196,11 @@ class WSGICompile(unittest.TestCase):
             ]
         urlmap = paste.urlmap.URLMap()
         urlmap["/js"] = wsgi.Combined(
-            files = files.Tree(paths, {"inputs": inputs}))
+            files = files.Tree(paths, inputs = inputs))
         return webtest.TestApp(urlmap)
 
     def test_sub_combined1(self):
-        app = self.get_subApp(
-            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
+        app = self.get_subApp(["test1.js"])
         resp = app.get("/js/compile")
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
@@ -225,12 +215,11 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         app = wsgi.Compile(
-            files = files.Tree(paths, {"inputs": inputs}))
+            files = files.Tree(paths, inputs = inputs))
         return webtest.TestApp(app)
 
     def test_compile1(self):
-        app = self.get_compileApp(
-            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
+        app = self.get_compileApp(["test1.js"])
         resp = app.get("/")
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
@@ -239,8 +228,7 @@ class WSGICompile(unittest.TestCase):
     def test_compile2(self):
         # XXX - update test to make sure that we pull in the extra Java Script
         # source specified
-        app = self.get_compileApp(
-            inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
+        app = self.get_compileApp(["test1.js"])
         resp = app.get("/?input=test1.js&input=test2.js")
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
@@ -273,6 +261,7 @@ class TestFiles(unittest.TestCase):
         self.assertRaises(ValueError, tree.getDeps, "")
 
     def test_deps2(self):
+        # test getDeps with full filename
         filename = self.writefile1("app.js", """goog.provide('app');\n""")
         tree = files.Tree([self.root1])
         deps = tree.getDeps([filename])
@@ -282,6 +271,7 @@ class TestFiles(unittest.TestCase):
             ["%s/base.js" % self.root1, "%s/app.js" % self.root1])
 
     def test_deps3(self):
+        # test getDeps with just the path info
         filename = self.writefile1("app.js", """goog.provide('app');\n""")
         tree = files.Tree([self.root1])
         deps = tree.getDeps(["app.js"])
@@ -293,7 +283,7 @@ class TestFiles(unittest.TestCase):
     def test_deps4(self):
         # default inputs
         filename = self.writefile1("app.js", """goog.provide('app');\n""")
-        tree = files.Tree([self.root1], {"inputs": ["app.js"]})
+        tree = files.Tree([self.root1], inputs = ["app.js"])
         deps = tree.getDeps()
         self.assertEqual(len(deps), 2)
         self.assertEqual(

@@ -117,7 +117,7 @@ def get_input_arguments(local_conf):
         inputs = ()
     local_conf["inputs"] = inputs
 
-    local_conf["files"] = files.Tree(local_conf["paths"].split(), local_conf)
+    local_conf["files"] = files.Tree(local_conf["paths"].split(), **local_conf)
 
     return local_conf
 

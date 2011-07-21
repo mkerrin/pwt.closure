@@ -85,9 +85,9 @@ _default_config = {
 
 class Tree(object):
 
-    def __init__(self, roots, config = {}):
+    def __init__(self, roots, **config):
         self.roots = roots
-        # Extend the default configuration.
+        # Extend the default configuration but don't change it
         self.config = _default_config.copy()
         self.config.update(config)
 
