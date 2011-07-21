@@ -24,6 +24,7 @@ setup(
     extras_require = {
         "test": [
             "WebTest",
+            "zc.buildout",
             ],
         },
 
@@ -33,6 +34,9 @@ setup(
             ],
         "console_scripts": [
             "closurebuilder = pwt.closure.cli:main",
+            ],
+        "zc.buildout": [
+            "compile = pwt.closure.recipe:CompileRecipe",
             ],
         },
 

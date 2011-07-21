@@ -1,9 +1,12 @@
 import os.path
-import paste.urlmap
 import shutil
 import tempfile
 import unittest
+
+import paste.urlmap
 import webtest
+import zc.buildout.buildout
+import zc.buildout.testing
 
 import wsgi
 import files
@@ -302,3 +305,72 @@ class TestFiles(unittest.TestCase):
         tree = files.Tree([self.root1])
         src = tree.getSource("/base.js")
         self.assertEqual(src.GetSource(), "goog.provide('goog');\n")
+
+
+class RecipeTestCase(unittest.TestCase):
+
+    def setUp(self):
+        base = tempfile.mkdtemp("buildoutSetUp")
+        self.base = os.path.realpath(base)
+
+        self.cwd = os.getcwd()
+
+    def tearDown(self):
+        shutil.rmtree(self.base)
+        os.chdir(self.cwd)
+
+    def test_recipe(self):
+        import pdb
+        pdb.set_trace()
+        base = os.path.join(self.base, "_TEST_")
+        os.mkdir(base)
+        media = os.path.join(base, "media")
+        os.mkdir(media)
+
+        deggs = os.path.join(base, "develop-eggs")
+        os.mkdir(deggs)
+
+        zc.buildout.testing.install_develop("setuptools", deggs)
+        zc.buildout.testing.install_develop("zc.buildout", deggs)
+        zc.buildout.testing.install_develop("pwt.closure", deggs)
+
+        closure_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..", "..", "..", "parts", "closure-library", "closure-library")
+            )
+
+        open(os.path.join(base, "buildout.cfg"), "w").write("""
+[buildout]
+parts = compiled.js
+
+[compiled.js]
+recipe = pwt.closure:compile
+roots =
+    %(closure)s
+    %(pwt.closure)s
+
+inputs = %(inputs)s
+
+outputdir = %(media)s
+""" % {"closure": closure_path,
+       "pwt.closure": os.path.dirname(__file__),
+       "inputs": os.path.join(os.path.dirname(__file__), "test1.js"),
+       "media": media,
+       })
+
+        os.chdir(base)
+        config = [
+            ("buildout", "log-level", "WARNING"),
+            ("buildout", "offline", "true"),
+            ("buildout", "newest", "false"),
+            ]
+        zc.buildout.buildout.Buildout(
+            "buildout.cfg", config, user_defaults = False,
+            ).bootstrap([])
+
+        buildout = os.path.join(base, "bin", "buildout")
+        os.system(buildout)
+
+        compiled = os.listdir(media)
+        self.assertEqual(compiled, ["ab9c19a69b02ed56aaeee17b75e2579d.js"])
