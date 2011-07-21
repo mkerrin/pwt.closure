@@ -320,8 +320,10 @@ class RecipeTestCase(unittest.TestCase):
         os.chdir(self.cwd)
 
     def test_recipe(self):
-        import pdb
-        pdb.set_trace()
+        # XXX - when we run the recipe in the test buildout upgrades itself and
+        # installs a new version of setuptools and zc.buildout but never
+        # reuses the ones installed by the buildout to generate the test
+        # scripts.
         base = os.path.join(self.base, "_TEST_")
         os.mkdir(base)
         media = os.path.join(base, "media")
