@@ -348,7 +348,7 @@ parts = compiled.js
 
 [compiled.js]
 recipe = pwt.closure:compile
-roots =
+paths =
     %(closure)s
     %(pwt.closure)s
 

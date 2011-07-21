@@ -12,7 +12,7 @@ class CompileRecipe(object):
 
         config = options.copy()
         config["inputs"] = options["inputs"].split()
-        tree = files.Tree(options["roots"].split(), config)
+        tree = files.Tree(options["paths"].split(), config)
         self.compiled_code = tree.getCompiledSource()
 
         md5name = hashlib.md5()
