@@ -27,6 +27,10 @@ _FILE_REGEX = re.compile(r"^.+\.(js|soy)$")
 DEFAULT_SOY_JAR = os.path.join(
     os.path.dirname(__file__), "jars", "SoyToJsSrcCompiler.jar")
 
+DEFAULT_COMPILER_JAR = os.path.join(
+    os.path.dirname(__file__), "jars", "compiler.jar")
+
+
 class PathSource(source.Source):
 
     def __init__(self, path):
@@ -68,10 +72,23 @@ def get_output_filename(output_format, filename):
     return output_format
 
 
+_default_config = {
+    # SoyToJsSrcCompiler.jar
+    "soy_jar": DEFAULT_SOY_JAR,
+    # compiler.jar
+    "compiler_jar": DEFAULT_COMPILER_JAR,
+    "compiler_flags": [],
+    # default inputs
+    "inputs": [],
+    }
+
 class Tree(object):
 
-    def __init__(self, roots):
+    def __init__(self, roots, config = {}):
         self.roots = roots
+        # Extend the default configuration.
+        self.config = _default_config.copy()
+        self.config.update(config)
 
         sources = set()
         path_info = {}
@@ -114,7 +131,7 @@ class Tree(object):
             tmpdir = tempfile.mkdtemp()
             outputPathFormat = "%s/{INPUT_FILE_NAME_NO_EXT}.js" % tmpdir
             args = [
-                "java", "-jar", DEFAULT_SOY_JAR,
+                "java", "-jar", self.config["soy_jar"],
                 "--shouldProvideRequireSoyNamespaces",
                 "--outputPathFormat", outputPathFormat,
                 ]
@@ -144,7 +161,9 @@ class Tree(object):
 
         self.path_info = path_info
 
-    def getDeps(self, inputs):
+    def getDeps(self, inputs = None):
+        inputs = inputs or self.config["inputs"]
+
         input_namespaces = set()
         for input_path in inputs:
             src = None
@@ -163,10 +182,11 @@ class Tree(object):
 
         return deps
 
-    def getCompiledSource(self, inputs, compiler_jar, compiler_flags):
+    def getCompiledSource(self, inputs = None):
+        inputs = inputs or self.config["inputs"]
         deps = self.getDeps(inputs)
 
-        args = ["java", "-jar", compiler_jar]
+        args = ["java", "-jar", self.config["compiler_jar"]]
         for src in deps:
             path = src.GetPath()
             if path is None:
@@ -178,8 +198,7 @@ class Tree(object):
                 path = fp.name
             args += ["--js", path]
 
-        if compiler_flags:
-            args += compiler_flags
+        args += self.config["compiler_flags"]
 
         proc = subprocess.Popen(args, stdout = subprocess.PIPE)
         stdoutdata, unused_stderrdata = proc.communicate()

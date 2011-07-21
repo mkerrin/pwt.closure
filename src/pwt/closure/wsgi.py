@@ -37,14 +37,12 @@ class Input(object):
 
 class Raw(object):
 
-    def __init__(self, files, inputs = None, **kwargs):
+    def __init__(self, files, **kwargs):
         self.files = files
-        self.inputs = inputs
 
     @webob.dec.wsgify
     def __call__(self, request):
-        inputs = request.GET.getall("input") or self.inputs
-        deps = self.files.getDeps(inputs)
+        deps = self.files.getDeps(request.GET.getall("input"))
         path = "/compile"
 
         base_url = urlparse.urljoin(request.url, "input/")
@@ -90,17 +88,9 @@ class Raw(object):
 
 class Compile(Raw):
 
-    def __init__(self, files, inputs = None, compiler_jar = None, compiler_flags = []):
-        super(Compile, self).__init__(files, inputs)
-
-        self.compiler_jar = compiler_jar
-        self.compiler_flags = compiler_flags
-
     @webob.dec.wsgify
     def __call__(self, request):
-        inputs = request.GET.getall("input") or self.inputs
-        output = self.files.getCompiledSource(
-            inputs, self.compiler_jar, self.compiler_flags)
+        output = self.files.getCompiledSource(request.GET.getall("input"))
 
         return webob.Response(
             body = output, content_type = "application/javascript")
@@ -118,14 +108,16 @@ class Combined(object):
 
 
 def get_input_arguments(local_conf):
-    local_conf["files"] = files.Tree(local_conf["paths"].split())
-
+    # local_conf is a dictionary of unparsed configuration from an ini file.
+    # We need to split some values up into lists where appropriate.
     inputs = local_conf.get("inputs", "")
     if inputs:
         inputs = inputs.split()
     else:
         inputs = ()
     local_conf["inputs"] = inputs
+
+    local_conf["files"] = files.Tree(local_conf["paths"].split(), local_conf)
 
     return local_conf
 

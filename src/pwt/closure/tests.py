@@ -94,11 +94,6 @@ BODIES = {
 """
     }
 
-DEFAULT_COMPILER_JAR = os.path.join(
-    os.path.dirname(__file__),
-    "jars",
-    "compiler.jar")
-
 class WSGICompile(unittest.TestCase):
 
     def get_app(self, inputs):
@@ -110,7 +105,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(
-            wsgi.Raw(files = files.Tree(paths), inputs = inputs))
+            wsgi.Raw(files = files.Tree(paths, {"inputs": inputs})))
 
     def get_inputApp(self, inputs):
         paths = [
@@ -121,7 +116,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(
-            wsgi.Input(files = files.Tree(paths), inputs = inputs))
+            wsgi.Input(files = files.Tree(paths, {"inputs": inputs})))
 
     def test_secure_input_app(self):
         app = self.get_inputApp(
@@ -168,7 +163,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Combined(
-            files = files.Tree(paths), inputs = inputs))
+            files = files.Tree(paths, {"inputs": inputs})))
 
     def test_combined1(self):
         app = self.get_combined(
@@ -207,7 +202,7 @@ class WSGICompile(unittest.TestCase):
             ]
         urlmap = paste.urlmap.URLMap()
         urlmap["/js"] = wsgi.Combined(
-            files = files.Tree(paths), inputs = inputs)
+            files = files.Tree(paths, {"inputs": inputs}))
         return webtest.TestApp(urlmap)
 
     def test_sub_combined1(self):
@@ -227,8 +222,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         app = wsgi.Compile(
-            files = files.Tree(paths), inputs = inputs,
-            compiler_jar = DEFAULT_COMPILER_JAR)
+            files = files.Tree(paths, {"inputs": inputs}))
         return webtest.TestApp(app)
 
     def test_compile1(self):
@@ -240,6 +234,8 @@ class WSGICompile(unittest.TestCase):
         self.assert_(resp.content_length > 0)
 
     def test_compile2(self):
+        # XXX - update test to make sure that we pull in the extra Java Script
+        # source specified
         app = self.get_compileApp(
             inputs = [os.path.join(os.path.dirname(__file__), "test1.js")])
         resp = app.get("/?input=test1.js&input=test2.js")
@@ -291,6 +287,15 @@ class TestFiles(unittest.TestCase):
             [d.GetPath() for d in deps],
             ["%s/base.js" % self.root1, "%s/app.js" % self.root1])
 
+    def test_deps4(self):
+        # default inputs
+        filename = self.writefile1("app.js", """goog.provide('app');\n""")
+        tree = files.Tree([self.root1], {"inputs": ["app.js"]})
+        deps = tree.getDeps()
+        self.assertEqual(len(deps), 2)
+        self.assertEqual(
+            [d.GetPath() for d in deps],
+            ["%s/base.js" % self.root1, "%s/app.js" % self.root1])
 
     def test_source1(self):
         filename = self.writefile1("app.js", """goog.provide('app');\n""")
