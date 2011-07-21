@@ -82,6 +82,7 @@ _default_config = {
     "inputs": [],
     }
 
+
 class Tree(object):
 
     def __init__(self, roots, config = {}):
@@ -153,10 +154,11 @@ class Tree(object):
             # Cleanup
             shutil.rmtree(tmpdir)
 
-        self.tree = depstree.DepsTree(sources)
-
         if basefile is None:
             raise ValueError("No Closure base.js found")
+
+        self.tree = depstree.DepsTree(sources)
+
         self.base = basefile
 
         self.path_info = path_info
@@ -183,7 +185,6 @@ class Tree(object):
         return deps
 
     def getCompiledSource(self, inputs = None):
-        inputs = inputs or self.config["inputs"]
         deps = self.getDeps(inputs)
 
         args = ["java", "-jar", self.config["compiler_jar"]]
