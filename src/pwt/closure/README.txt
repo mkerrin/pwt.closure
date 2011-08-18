@@ -36,3 +36,9 @@ TODO
  * Need common configuration between cli, buildout, and wsgi
 
  * Need default configuration that works out of the box
+
+ * Internationalization needs to be considered in the generation of templates
+   and in the compilation stages.
+
+ * Need to be able to configure a mapping from file extensions to a callable
+   that will compile any templates to javascript
