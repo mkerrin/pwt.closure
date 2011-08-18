@@ -365,4 +365,4 @@ outputdir = %(media)s
         os.system(buildout)
 
         compiled = os.listdir(media)
-        self.assertEqual(compiled, ["ab9c19a69b02ed56aaeee17b75e2579d.js"])
+        self.assertEqual(compiled, ["6474f9004bc5e3914f4b9c42f2b249ee.js"])
