@@ -21,3 +21,6 @@ paths =
     ${buildout:directory}/src/pwt/closure
 
 inputs = src/pwt/closure/test1.js
+
+compiler_jar =
+compiler_flags =
