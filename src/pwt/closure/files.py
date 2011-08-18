@@ -129,6 +129,7 @@ class Tree(object):
         if soyes:
             # XXX - we could have multiple files with the same filename but
             # located in a different patch that will override each other here.
+            # XXX - Also we need to be able to handle multiple languages
             tmpdir = tempfile.mkdtemp()
             outputPathFormat = "%s/{INPUT_FILE_NAME_NO_EXT}.js" % tmpdir
             args = [
