@@ -316,16 +316,32 @@ class ClosureTemplatesTestCase(unittest.TestCase):
         self.assertEqual(source.requires, set(["soy", "soy.StringBuilder"]))
 
     def test_files1(self):
-        import pdb
-        pdb.set_trace()
         self.writefile1("base.js", "goog.provide('goog');\n")
         self.writefile1("soy.js", "goog.provide('soy.StringBuilder');\ngoog.provide('soy');\n")
         filename = self.writefile1("test.soy", """{namespace examples.soy}
-
-{template .helloWorld}Hello{/template}""")
+/** */
+{template .helloWorld}
+Hello
+{/template}
+""")
 
         tree = files.Tree([self.root1])
-        
+        source = tree.getSource("/test.soy")
+        self.assertEqual(source.GetSource(), """// This file was automatically generated from test.soy.
+// Please don't edit this file by hand.
+
+goog.provide('examples.soy');
+
+goog.require('soy');
+goog.require('soy.StringBuilder');
+
+
+examples.soy.helloWorld = function(opt_data, opt_sb) {
+  var output = opt_sb || new soy.StringBuilder();
+  output.append('Hello');
+  if (!opt_sb) return output.toString();
+};
+""")
 
 
 class RecipeTestCase(unittest.TestCase):

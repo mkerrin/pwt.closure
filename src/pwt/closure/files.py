@@ -242,4 +242,8 @@ class Tree(object):
 
     def getSource(self, path_info):
         # Note: get the Java Script source
+        if not self._soyes_built and self._soyes:
+            if path_info in [src.path_info for src in self._soyes]:
+                self._build_soyes()
+
         return self.path_info[path_info]
