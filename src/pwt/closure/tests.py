@@ -315,6 +315,18 @@ class ClosureTemplatesTestCase(unittest.TestCase):
         self.assertEqual(source.provides, set(["examples.soy"]))
         self.assertEqual(source.requires, set(["soy", "soy.StringBuilder"]))
 
+    def test_files1(self):
+        import pdb
+        pdb.set_trace()
+        self.writefile1("base.js", "goog.provide('goog');\n")
+        self.writefile1("soy.js", "goog.provide('soy.StringBuilder');\ngoog.provide('soy');\n")
+        filename = self.writefile1("test.soy", """{namespace examples.soy}
+
+{template .helloWorld}Hello{/template}""")
+
+        tree = files.Tree([self.root1])
+        
+
 
 class RecipeTestCase(unittest.TestCase):
 
