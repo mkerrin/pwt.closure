@@ -1,0 +1,8 @@
+CHANGES
+=======
+
+Unreleased
+----------
+
+- Lazy load the soy templates to only when we actually need to use a closure
+  template

@@ -293,6 +293,29 @@ class TestFiles(unittest.TestCase):
         self.assertEqual(src.GetSource(), "goog.provide('goog');\n")
 
 
+class ClosureTemplatesTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.root1 = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.root1)
+
+    def writefile1(self, name, contents):
+        filename = os.path.join(self.root1, name)
+        open(filename, "w").write(contents)
+        return filename
+
+    def test_source_scan1(self):
+        filename = self.writefile1("test.soy", """{namespace examples.soy}
+
+{template .helloWorld}Hello{/template}""")
+
+        source = files.SoySource(filename)
+        self.assertEqual(source.provides, set(["examples.soy"]))
+        self.assertEqual(source.requires, set(["soy", "soy.StringBuilder"]))
+
+
 class RecipeTestCase(unittest.TestCase):
 
     def setUp(self):

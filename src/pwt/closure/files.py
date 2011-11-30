@@ -41,6 +41,9 @@ class PathSource(source.Source):
     def GetPath(self):
         return self._path
 
+# closure template integration
+
+_SOY_NAMESPACE = re.compile(r"{namespace\s+([a-zA-Z_\.]+)\s*}")
 
 class SoySource(source.Source):
 
@@ -51,9 +54,24 @@ class SoySource(source.Source):
 
         self._path = None
         self._src = path
+        self._ScanSource()
 
     def GetPath(self):
         return self._path
+
+    def _ScanSource(self):
+        src = source.GetFileContents(self._src)
+
+        src_lines = src.splitlines()
+        for line in src_lines:
+            match = _SOY_NAMESPACE.match(line)
+            if match:
+                self.provides.add(match.group(1))
+
+            # XXX - need to implement a RE for any {call}...{/call} blocks
+            # that would define a goog.require for us
+            self.requires.add("soy")
+            self.requires.add("soy.StringBuilder")
 
 
 def get_output_filename(output_format, filename):
@@ -126,7 +144,20 @@ class Tree(object):
 
                 sources.add(src)
 
-        if soyes:
+        if basefile is None:
+            raise ValueError("No Closure base.js found")
+
+        self.soyes = soyes
+        self._soyes_build = False
+
+        self.tree = depstree.DepsTree(sources)
+
+        self.base = basefile
+
+        self.path_info = path_info
+
+    def build_soyes(self):
+        if self.soyes:
             # XXX - we could have multiple files with the same filename but
             # located in a different patch that will override each other here.
             # XXX - Also we need to be able to handle multiple languages
@@ -137,7 +168,7 @@ class Tree(object):
                 "--shouldProvideRequireSoyNamespaces",
                 "--outputPathFormat", outputPathFormat,
                 ]
-            for soy in soyes:
+            for soy in self.soyes:
                 args.append(soy._src)
 
             proc = subprocess.Popen(args, stdout = subprocess.PIPE)
@@ -146,25 +177,18 @@ class Tree(object):
             if proc.returncode != 0:
                 raise ValueError("Failed to generate templates")
 
-            for soy in soyes:
+            for soy in self.soyes:
                 # Patch up the source
                 _path = get_output_filename(outputPathFormat, soy._src)
                 soy._source = source.GetFileContents(_path)
-                soy._ScanSource()
 
             # Cleanup
             shutil.rmtree(tmpdir)
 
-        if basefile is None:
-            raise ValueError("No Closure base.js found")
-
-        self.tree = depstree.DepsTree(sources)
-
-        self.base = basefile
-
-        self.path_info = path_info
+            self._soyes_build = True
 
     def getDeps(self, inputs = None):
+        # Returns a list of Source objects.
         inputs = inputs or self.config["inputs"]
 
         input_namespaces = set()
@@ -182,6 +206,10 @@ class Tree(object):
             raise ValueError("Input namespaces must be specified")
 
         deps = [self.base] + self.tree.GetDependencies(input_namespaces)
+        if not self._soyes_build and self.soyes:
+            required_to_build = set(deps) & self.soyes
+            if required_to_build:
+                self.build_soyes()
 
         return deps
 
@@ -192,6 +220,7 @@ class Tree(object):
         for src in deps:
             path = src.GetPath()
             if path is None:
+                # Soy Source files are 
                 # tp - tempfile that gets cleared out when the pointer goes
                 # out of scope
                 fp = tempfile.NamedTemporaryFile(suffix = ".js")
