@@ -32,6 +32,7 @@ DEFAULT_COMPILER_JAR = os.path.join(
 
 
 class PathSource(source.Source):
+    # Ordinary Java Script file
 
     def __init__(self, path):
         super(PathSource, self).__init__(source.GetFileContents(path))
@@ -147,8 +148,8 @@ class Tree(object):
         if basefile is None:
             raise ValueError("No Closure base.js found")
 
-        self.soyes = soyes
-        self._soyes_build = False
+        self._soyes = soyes
+        self._soyes_built = False
 
         self.tree = depstree.DepsTree(sources)
 
@@ -156,8 +157,8 @@ class Tree(object):
 
         self.path_info = path_info
 
-    def build_soyes(self):
-        if self.soyes:
+    def _build_soyes(self):
+        if self._soyes:
             # XXX - we could have multiple files with the same filename but
             # located in a different patch that will override each other here.
             # XXX - Also we need to be able to handle multiple languages
@@ -168,7 +169,7 @@ class Tree(object):
                 "--shouldProvideRequireSoyNamespaces",
                 "--outputPathFormat", outputPathFormat,
                 ]
-            for soy in self.soyes:
+            for soy in self._soyes:
                 args.append(soy._src)
 
             proc = subprocess.Popen(args, stdout = subprocess.PIPE)
@@ -177,7 +178,7 @@ class Tree(object):
             if proc.returncode != 0:
                 raise ValueError("Failed to generate templates")
 
-            for soy in self.soyes:
+            for soy in self._soyes:
                 # Patch up the source
                 _path = get_output_filename(outputPathFormat, soy._src)
                 soy._source = source.GetFileContents(_path)
@@ -185,7 +186,7 @@ class Tree(object):
             # Cleanup
             shutil.rmtree(tmpdir)
 
-            self._soyes_build = True
+            self._soyes_built = True
 
     def getDeps(self, inputs = None):
         # Returns a list of Source objects.
@@ -206,10 +207,10 @@ class Tree(object):
             raise ValueError("Input namespaces must be specified")
 
         deps = [self.base] + self.tree.GetDependencies(input_namespaces)
-        if not self._soyes_build and self.soyes:
-            required_to_build = set(deps) & self.soyes
+        if not self._soyes_built and self._soyes:
+            required_to_build = set(deps) & self._soyes
             if required_to_build:
-                self.build_soyes()
+                self._build_soyes()
 
         return deps
 
