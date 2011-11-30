@@ -103,8 +103,7 @@ class WSGICompile(unittest.TestCase):
         paths = [
             os.path.join(
                 os.path.dirname(__file__),
-                "..", "..", "..",
-                "parts", "closure-library", "closure-library/"),
+                "..", "..", "..", "checkouts", "closure"),
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(
@@ -114,8 +113,7 @@ class WSGICompile(unittest.TestCase):
         paths = [
             os.path.join(
                 os.path.dirname(__file__),
-                "..", "..", "..",
-                "parts", "closure-library", "closure-library/"),
+                "..", "..", "..", "checkouts", "closure"),
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(
@@ -156,8 +154,7 @@ class WSGICompile(unittest.TestCase):
         paths = [
             os.path.join(
                 os.path.dirname(__file__),
-                "..", "..", "..",
-                "parts", "closure-library", "closure-library/"),
+                "..", "..", "..", "checkouts", "closure"),
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Combined(
@@ -190,8 +187,8 @@ class WSGICompile(unittest.TestCase):
         paths = [
             os.path.join(
                 os.path.dirname(__file__),
-                "..", "..", "..",
-                "parts", "closure-library", "closure-library/"),
+                "..", "..", "..", "checkouts", "closure"
+                ),
             os.path.join(os.path.dirname(__file__)),
             ]
         urlmap = paste.urlmap.URLMap()
@@ -210,8 +207,7 @@ class WSGICompile(unittest.TestCase):
         paths = [
             os.path.join(
                 os.path.dirname(__file__),
-                "..", "..", "..",
-                "parts", "closure-library", "closure-library/"),
+                "..", "..", "..", "checkouts", "closure"),
             os.path.join(os.path.dirname(__file__)),
             ]
         app = wsgi.Compile(
@@ -319,17 +315,24 @@ class RecipeTestCase(unittest.TestCase):
         media = os.path.join(base, "media")
         os.mkdir(media)
 
+        # Nothing so far
+        compiled = os.listdir(media)
+        self.assertEqual(len(compiled), 0)
+
         deggs = os.path.join(base, "develop-eggs")
         os.mkdir(deggs)
 
         zc.buildout.testing.install_develop("setuptools", deggs)
         zc.buildout.testing.install_develop("zc.buildout", deggs)
         zc.buildout.testing.install_develop("pwt.closure", deggs)
+        zc.buildout.testing.install_develop("Paste", deggs)
+        zc.buildout.testing.install_develop("WebOb", deggs)
 
         closure_path = os.path.abspath(
             os.path.join(
                 os.path.dirname(__file__),
-                "..", "..", "..", "parts", "closure-library", "closure-library")
+                "..", "..", "..", "checkouts", "closure"
+                )
             )
 
         open(os.path.join(base, "buildout.cfg"), "w").write("""
@@ -365,4 +368,5 @@ outputdir = %(media)s
         os.system(buildout)
 
         compiled = os.listdir(media)
-        self.assertEqual(compiled, ["6474f9004bc5e3914f4b9c42f2b249ee.js"])
+        self.assertEqual(len(compiled), 1)
+        self.assert_(compiled[0].endswith(".js"))

@@ -17,7 +17,7 @@ document_root = ${buildout:directory}/src/pwt/closure
 use = egg:pwt.closure#main
 
 paths =
-    ${closure-library:location}/closure-library
+    ${buildout:sources-dir}/closure/closure
     ${buildout:directory}/src/pwt/closure
 
 inputs = src/pwt/closure/test1.js
