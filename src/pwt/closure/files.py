@@ -32,9 +32,11 @@ DEFAULT_COMPILER_JAR = os.path.join(
 
 
 class PathSource(source.Source):
-    # Ordinary Java Script file
+    """
+    Source object of ordinary Java Script file
+    """
 
-    def __init__(self, path):
+    def __init__(self, tree, path):
         super(PathSource, self).__init__(source.GetFileContents(path))
 
         self._path = path
@@ -42,23 +44,74 @@ class PathSource(source.Source):
     def GetPath(self):
         return self._path
 
-# closure template integration
 
 _SOY_NAMESPACE = re.compile(r"{namespace\s+([a-zA-Z_\.]+)\s*}")
 
 class SoySource(source.Source):
+    """
+    Source object of Closure Template file. GetSource converts template
+    to Java Script
+    """
 
-    def __init__(self, path):
-        # XXX - missing attributes, set later.
+    def __init__(self, tree, path):
         self.provides = set()
         self.requires = set()
+
+        self._tree = tree
 
         self._path = None
         self._src = path
         self._ScanSource()
 
+        # Remember soy source
+        soyes = getattr(tree, "_soyes", None)
+        if soyes is None:
+            tree._soyes = set()
+            tree._soyes_built = False
+        tree._soyes.add(self)
+
     def GetPath(self):
         return self._path
+
+    def GetSource(self):
+        self._update()
+        return self._source
+
+    def _update(self):
+        if not self._tree._soyes_built and self._tree._soyes:
+            self._build_soyes()
+
+    def _build_soyes(self):
+        soyes = self._tree._soyes
+
+        # XXX - we could have multiple files with the same filename but
+        # located in a different patch that will override each other here.
+        # XXX - Also we need to be able to handle multiple languages
+        tmpdir = tempfile.mkdtemp()
+        outputPathFormat = "%s/{INPUT_FILE_NAME_NO_EXT}.js" % tmpdir
+        args = [
+            "java", "-jar", self._tree.config["soy_jar"],
+            "--shouldProvideRequireSoyNamespaces",
+            "--outputPathFormat", outputPathFormat,
+            ]
+        for soy in soyes:
+            args.append(soy._src)
+
+        proc = subprocess.Popen(args, stdout = subprocess.PIPE)
+        stdoutdata, unused_stderrdata = proc.communicate()
+
+        if proc.returncode != 0:
+            raise ValueError("Failed to generate templates")
+
+        for soy in soyes:
+            # Patch up the source
+            _path = get_output_filename(outputPathFormat, soy._src)
+            soy._source = source.GetFileContents(_path)
+
+        # Cleanup
+        shutil.rmtree(tmpdir)
+
+        self._tree._soyes_built = True
 
     def _ScanSource(self):
         src = source.GetFileContents(self._src)
@@ -114,7 +167,6 @@ class Tree(object):
         path_info = {}
         basefile = None
 
-        soyes = set()
         for root in roots:
             root = os.path.abspath(root)
 
@@ -122,14 +174,14 @@ class Tree(object):
                 if jsfile.endswith("soy"): # template
                     # We need to collect all templates and generate them
                     # all at once so that we only call a java subprocess once
-                    src = SoySource(jsfile)
-                    soyes.add(src)
+                    src = SoySource(self, jsfile)
                 elif jsfile.endswith("js"):
-                    src = PathSource(jsfile)
-                    if closurebuilder._IsClosureBaseFile(src):
-                        basefile = src
+                    src = PathSource(self, jsfile)
                 else:
                     raise ValueError("Unknown file extension")
+
+                if basefile is None and closurebuilder._IsClosureBaseFile(src):
+                    basefile = src
 
                 # Save the path_info so that we can map path_info to a source
                 # object and back.
@@ -148,45 +200,11 @@ class Tree(object):
         if basefile is None:
             raise ValueError("No Closure base.js found")
 
-        self._soyes = soyes
-        self._soyes_built = False
-
         self.tree = depstree.DepsTree(sources)
 
         self.base = basefile
 
         self.path_info = path_info
-
-    def _build_soyes(self):
-        if self._soyes:
-            # XXX - we could have multiple files with the same filename but
-            # located in a different patch that will override each other here.
-            # XXX - Also we need to be able to handle multiple languages
-            tmpdir = tempfile.mkdtemp()
-            outputPathFormat = "%s/{INPUT_FILE_NAME_NO_EXT}.js" % tmpdir
-            args = [
-                "java", "-jar", self.config["soy_jar"],
-                "--shouldProvideRequireSoyNamespaces",
-                "--outputPathFormat", outputPathFormat,
-                ]
-            for soy in self._soyes:
-                args.append(soy._src)
-
-            proc = subprocess.Popen(args, stdout = subprocess.PIPE)
-            stdoutdata, unused_stderrdata = proc.communicate()
-
-            if proc.returncode != 0:
-                raise ValueError("Failed to generate templates")
-
-            for soy in self._soyes:
-                # Patch up the source
-                _path = get_output_filename(outputPathFormat, soy._src)
-                soy._source = source.GetFileContents(_path)
-
-            # Cleanup
-            shutil.rmtree(tmpdir)
-
-            self._soyes_built = True
 
     def getDeps(self, inputs = None):
         # Returns a list of Source objects.
@@ -207,10 +225,6 @@ class Tree(object):
             raise ValueError("Input namespaces must be specified")
 
         deps = [self.base] + self.tree.GetDependencies(input_namespaces)
-        if not self._soyes_built and self._soyes:
-            required_to_build = set(deps) & self._soyes
-            if required_to_build:
-                self._build_soyes()
 
         return deps
 
@@ -221,7 +235,9 @@ class Tree(object):
         for src in deps:
             path = src.GetPath()
             if path is None:
-                # Soy Source files are 
+                # Soy Source files create tempfiles so we need to recreate
+                # them now so that we don't leave loads of tempfiles on the
+                # system
                 # tp - tempfile that gets cleared out when the pointer goes
                 # out of scope
                 fp = tempfile.NamedTemporaryFile(suffix = ".js")
@@ -242,8 +258,4 @@ class Tree(object):
 
     def getSource(self, path_info):
         # Note: get the Java Script source
-        if not self._soyes_built and self._soyes:
-            if path_info in [src.path_info for src in self._soyes]:
-                self._build_soyes()
-
         return self.path_info[path_info]

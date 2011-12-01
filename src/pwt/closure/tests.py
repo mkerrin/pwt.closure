@@ -297,6 +297,9 @@ class ClosureTemplatesTestCase(unittest.TestCase):
 
     def setUp(self):
         self.root1 = tempfile.mkdtemp()
+        self.writefile1("base.js", "goog.provide('goog');\n")
+        self.writefile1("soy.js", """goog.provide('soy.StringBuilder');
+goog.provide('soy');""")
 
     def tearDown(self):
         shutil.rmtree(self.root1)
@@ -311,13 +314,11 @@ class ClosureTemplatesTestCase(unittest.TestCase):
 
 {template .helloWorld}Hello{/template}""")
 
-        source = files.SoySource(filename)
+        source = files.SoySource(files.Tree([self.root1]), filename)
         self.assertEqual(source.provides, set(["examples.soy"]))
         self.assertEqual(source.requires, set(["soy", "soy.StringBuilder"]))
 
     def test_files1(self):
-        self.writefile1("base.js", "goog.provide('goog');\n")
-        self.writefile1("soy.js", "goog.provide('soy.StringBuilder');\ngoog.provide('soy');\n")
         filename = self.writefile1("test.soy", """{namespace examples.soy}
 /** */
 {template .helloWorld}
