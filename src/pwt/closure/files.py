@@ -45,7 +45,7 @@ class PathSource(source.Source):
         return self._path
 
 
-_SOY_NAMESPACE = re.compile(r"{namespace\s+([a-zA-Z_\.]+)\s*}")
+_SOY_NAMESPACE = re.compile(r"{namespace\s+([a-zA-Z0-9_\.]+)\s*}")
 
 class SoySource(source.Source):
     """
@@ -116,6 +116,9 @@ class SoySource(source.Source):
     def _ScanSource(self):
         src = source.GetFileContents(self._src)
 
+        self.requires.add("soy")
+        self.requires.add("soy.StringBuilder")
+
         src_lines = src.splitlines()
         for line in src_lines:
             match = _SOY_NAMESPACE.match(line)
@@ -124,8 +127,6 @@ class SoySource(source.Source):
 
             # XXX - need to implement a RE for any {call}...{/call} blocks
             # that would define a goog.require for us
-            self.requires.add("soy")
-            self.requires.add("soy.StringBuilder")
 
 
 def get_output_filename(output_format, filename):

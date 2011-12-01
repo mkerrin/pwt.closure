@@ -97,6 +97,7 @@ BODIES = {
 """
     }
 
+
 class WSGICompile(unittest.TestCase):
 
     def get_app(self, inputs):
@@ -316,6 +317,29 @@ goog.provide('soy');""")
 
         source = files.SoySource(files.Tree([self.root1]), filename)
         self.assertEqual(source.provides, set(["examples.soy"]))
+        self.assertEqual(source.requires, set(["soy", "soy.StringBuilder"]))
+
+    def test_source_scan2(self):
+        filename = self.writefile1("test.soy", """{namespace examples.soy2}
+
+{template .helloWorld}Hello{/template}""")
+
+        source = files.SoySource(files.Tree([self.root1]), filename)
+        self.assertEqual(source.provides, set(["examples.soy2"]))
+        self.assertEqual(source.requires, set(["soy", "soy.StringBuilder"]))
+
+    def test_source_scan3(self):
+        filename = self.writefile1("test.soy", """{namespace examples.soy}
+{namespace examples.soy2}
+
+{template .helloWorld}Hello{/template}""")
+
+        class DummyTree(object):
+            pass
+
+        source = files.SoySource(DummyTree(), filename)
+        self.assertEqual(
+            source.provides, set(["examples.soy", "examples.soy2"]))
         self.assertEqual(source.requires, set(["soy", "soy.StringBuilder"]))
 
     def test_files1(self):
