@@ -13,13 +13,13 @@ import files
 
 class Input(object):
 
-    def __init__(self, files, **kwargs):
-        self.files = files
+    def __init__(self, tree, **kwargs):
+        self.tree = tree
 
     @webob.dec.wsgify
     def __call__(self, request):
         try:
-            src = self.files.getSource(request.path_info)
+            src = self.tree.getSource(request.path_info)
         except KeyError:
             status = 404
             content_type = None
@@ -37,17 +37,17 @@ class Input(object):
 
 class Raw(object):
 
-    def __init__(self, files, **kwargs):
-        self.files = files
+    def __init__(self, tree, **kwargs):
+        self.tree = tree
 
     @webob.dec.wsgify
     def __call__(self, request):
-        deps = self.files.getDeps(request.GET.getall("input"))
+        deps = self.tree.getDeps(request.GET.getall("input"))
         path = "/compile"
 
         base_url = urlparse.urljoin(request.url, "input/")
         # remove starting '/'
-        files = [
+        jsfiles = [
             urlparse.urljoin(base_url, js_source.path_info[1:])
             for js_source in deps
             ]
@@ -80,17 +80,20 @@ class Raw(object):
         doc.write('<script type="text/javascript" src="' + files[i] + '"><\/script>');
     }
 })();
-""" %(json.dumps(files), path)
+""" %(json.dumps(jsfiles), path)
 
         return webob.Response(
             body = output, content_type = "application/javascript")
 
 
-class Compile(Raw):
+class Compile(object):
+
+    def __init__(self, tree, **kwargs):
+        self.tree = tree
 
     @webob.dec.wsgify
     def __call__(self, request):
-        output = self.files.getCompiledSource(request.GET.getall("input"))
+        output = self.tree.getCompiledSource(request.GET.getall("input"))
 
         return webob.Response(
             body = output, content_type = "application/javascript")

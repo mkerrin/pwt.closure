@@ -108,7 +108,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(
-            wsgi.Raw(files = files.Tree(paths, inputs = inputs)))
+            wsgi.Raw(tree = files.Tree(paths, inputs = inputs)))
 
     def get_inputApp(self, inputs):
         paths = [
@@ -118,7 +118,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(
-            wsgi.Input(files = files.Tree(paths, inputs = inputs)))
+            wsgi.Input(tree = files.Tree(paths, inputs = inputs)))
 
     def test_secure_input_app(self):
         app = self.get_inputApp(["test1.js"])
@@ -159,7 +159,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Combined(
-            files = files.Tree(paths, inputs = inputs)))
+            tree = files.Tree(paths, inputs = inputs)))
 
     def test_combined1(self):
         app = self.get_combined(["test1.js"])
@@ -194,7 +194,7 @@ class WSGICompile(unittest.TestCase):
             ]
         urlmap = paste.urlmap.URLMap()
         urlmap["/js"] = wsgi.Combined(
-            files = files.Tree(paths, inputs = inputs))
+            tree = files.Tree(paths, inputs = inputs))
         return webtest.TestApp(urlmap)
 
     def test_sub_combined1(self):
@@ -212,7 +212,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         app = wsgi.Compile(
-            files = files.Tree(paths, inputs = inputs))
+            tree = files.Tree(paths, inputs = inputs))
         return webtest.TestApp(app)
 
     def test_compile1(self):
