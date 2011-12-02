@@ -231,6 +231,27 @@ class WSGICompile(unittest.TestCase):
         self.assertEqual(resp.content_type, "application/javascript")
         self.assert_(resp.content_length > 0)
 
+    def test_paste_integration1(self):
+        paths = [
+            os.path.join(
+                os.path.dirname(__file__),
+                "..", "..", "..", "checkouts", "closure"),
+            os.path.join(os.path.dirname(__file__)),
+            ]
+        app = webtest.TestApp(
+            wsgi.paste_combined_closure(
+                {},
+                inputs = "",
+                paths = "\n".join(paths),
+                )
+            )
+
+        resp = app.get("/", expect_errors = True)
+        self.assertEqual(resp.status_int, 404)
+
+        resp = app.get("/input/test1.js")
+        self.assertEqual(resp.status_int, 200)
+
 
 class TestFiles(unittest.TestCase):
 
