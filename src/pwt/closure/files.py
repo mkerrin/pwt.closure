@@ -22,7 +22,7 @@ import jscompiler
 sys.path = sys.path[:-1]
 
 
-_FILE_REGEX = re.compile(r"^.+\.(js|soy)$")
+_FILE_REGEX = re.compile(r"^.+\.(js|soy|jinja2)$")
 
 DEFAULT_SOY_JAR = os.path.join(
     os.path.dirname(__file__), "jars", "SoyToJsSrcCompiler.jar")
@@ -63,7 +63,8 @@ class SoySource(source.Source):
         self._src = path
         self._ScanSource()
 
-        # Remember soy source
+        # We need to collect all templates and generate them
+        # all at once so that we only call a java subprocess once
         soyes = getattr(tree, "_soyes", None)
         if soyes is None:
             tree._soyes = set()
@@ -155,11 +156,27 @@ _default_config = {
     "inputs": [],
     }
 
+_default_config["plugins_extensions"] = {
+    ".js": PathSource,
+    ".soy": SoySource,
+    }
+try:
+    import jinja
+    import pwt.jinja2js.environment
+except ImportError: # pwt.jinja2js not installed, probable
+    def parse_environment(settings):
+        raise ValueError("pwt.jinja2js is not installed")
+else:
+    _default_config["plugins_extensions"][".jinja2"] = jinja.Source
+
+    def parse_environment(settings):
+        return pwt.jinja2js.environment.parse_environment(settings)
+
 
 class Tree(object):
 
-    def __init__(self, roots, **config):
-        self.roots = roots
+    def __init__(self, **config):
+        self.roots = config["paths"]
         # Extend the default configuration but don't change it
         self.config = _default_config.copy()
         self.config.update(config)
@@ -168,18 +185,13 @@ class Tree(object):
         path_info = {}
         basefile = None
 
-        for root in roots:
+        for root in self.roots:
             root = os.path.abspath(root)
 
             for jsfile in treescan.ScanTree(root, _FILE_REGEX):
-                if jsfile.endswith("soy"): # template
-                    # We need to collect all templates and generate them
-                    # all at once so that we only call a java subprocess once
-                    src = SoySource(self, jsfile)
-                elif jsfile.endswith("js"):
-                    src = PathSource(self, jsfile)
-                else:
-                    raise ValueError("Unknown file extension")
+                ext = os.path.splitext(jsfile)[1]
+                # throws KeyError if we don't understand the file extension
+                src = _default_config["plugins_extensions"][ext](self, jsfile)
 
                 if basefile is None and closurebuilder._IsClosureBaseFile(src):
                     basefile = src

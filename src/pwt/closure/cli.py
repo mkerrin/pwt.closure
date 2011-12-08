@@ -18,21 +18,28 @@ def main(args = None, output = None):
         "--input", dest = "inputs", action = "append", default = [],
         metavar = "INPUTS",
         )
+
     parser.add_option(
-        "--root", dest = "roots", action = "append", default = [],
+        "--root", dest = "paths", action = "append", default = [],
         metavar = "ROOTS",
         )
 
     options, inputs = parser.parse_args(args)
 
-    #
+    # Directory to save the comiled Java Script to
     if not options.outputdir:
         raise ValueError("Missing outputdir")
 
-    # 
+    # We can list our inputs on the command line without the --input option
     options.inputs.extend(inputs)
 
-    tree = files.Tree(options.roots)
+    # need to configure Jinja2 environment if appropriate
+    try:
+        options["jinja2.environment"] = files.parse_environment(options)
+    except (KeyError, ValueError), err:
+        pass
+
+    tree = files.Tree(**options)
     compiled_code = tree.getCompiledSource(options.inputs)
 
     md5 = haslib.md5()

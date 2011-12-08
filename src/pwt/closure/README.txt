@@ -10,9 +10,9 @@ WSGI integration
  * /input/closure/goog/base.js
  * /input/relief/auth/auth_manager.js
 
-/soy
+This also works with Closure Templates and it will return JavaScript
 
- * /soy/relief/handlers/handlers.soy
+ * /input/relief/handlers/handlers.soy
 
 reload
 ------

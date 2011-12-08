@@ -108,7 +108,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(
-            wsgi.Raw(tree = files.Tree(paths, inputs = inputs)))
+            wsgi.Raw(tree = files.Tree(paths = paths, inputs = inputs)))
 
     def get_inputApp(self, inputs):
         paths = [
@@ -118,7 +118,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(
-            wsgi.Input(tree = files.Tree(paths, inputs = inputs)))
+            wsgi.Input(tree = files.Tree(paths = paths, inputs = inputs)))
 
     def test_secure_input_app(self):
         app = self.get_inputApp(["test1.js"])
@@ -159,7 +159,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         return webtest.TestApp(wsgi.Combined(
-            tree = files.Tree(paths, inputs = inputs)))
+            tree = files.Tree(paths = paths, inputs = inputs)))
 
     def test_combined1(self):
         app = self.get_combined(["test1.js"])
@@ -194,7 +194,7 @@ class WSGICompile(unittest.TestCase):
             ]
         urlmap = paste.urlmap.URLMap()
         urlmap["/js"] = wsgi.Combined(
-            tree = files.Tree(paths, inputs = inputs))
+            tree = files.Tree(paths = paths, inputs = inputs))
         return webtest.TestApp(urlmap)
 
     def test_sub_combined1(self):
@@ -212,7 +212,7 @@ class WSGICompile(unittest.TestCase):
             os.path.join(os.path.dirname(__file__)),
             ]
         app = wsgi.Compile(
-            tree = files.Tree(paths, inputs = inputs))
+            tree = files.Tree(paths = paths, inputs = inputs))
         return webtest.TestApp(app)
 
     def test_compile1(self):
@@ -269,19 +269,19 @@ class TestFiles(unittest.TestCase):
         return filename
 
     def test_tree1(self):
-        tree = files.Tree([self.root1])
+        tree = files.Tree(paths = [self.root1])
         info = dict(
             [(key, val.GetPath()) for key, val in tree.path_info.items()])
         self.assertEqual(info, {"/base.js": "%s/base.js" % self.root1})
 
     def test_deps1(self):
-        tree = files.Tree([self.root1])
+        tree = files.Tree(paths = [self.root1])
         self.assertRaises(ValueError, tree.getDeps, "")
 
     def test_deps2(self):
         # test getDeps with full filename
         filename = self.writefile1("app.js", """goog.provide('app');\n""")
-        tree = files.Tree([self.root1])
+        tree = files.Tree(paths = [self.root1])
         deps = tree.getDeps([filename])
         self.assertEqual(len(deps), 2)
         self.assertEqual(
@@ -291,7 +291,7 @@ class TestFiles(unittest.TestCase):
     def test_deps3(self):
         # test getDeps with just the path info
         filename = self.writefile1("app.js", """goog.provide('app');\n""")
-        tree = files.Tree([self.root1])
+        tree = files.Tree(paths = [self.root1])
         deps = tree.getDeps(["app.js"])
         self.assertEqual(len(deps), 2)
         self.assertEqual(
@@ -301,7 +301,7 @@ class TestFiles(unittest.TestCase):
     def test_deps4(self):
         # default inputs
         filename = self.writefile1("app.js", """goog.provide('app');\n""")
-        tree = files.Tree([self.root1], inputs = ["app.js"])
+        tree = files.Tree(paths = [self.root1], inputs = ["app.js"])
         deps = tree.getDeps()
         self.assertEqual(len(deps), 2)
         self.assertEqual(
@@ -310,7 +310,7 @@ class TestFiles(unittest.TestCase):
 
     def test_source1(self):
         filename = self.writefile1("app.js", """goog.provide('app');\n""")
-        tree = files.Tree([self.root1])
+        tree = files.Tree(paths = [self.root1])
         src = tree.getSource("/base.js")
         self.assertEqual(src.GetSource(), "goog.provide('goog');\n")
 
@@ -336,7 +336,7 @@ goog.provide('soy');""")
 
 {template .helloWorld}Hello{/template}""")
 
-        source = files.SoySource(files.Tree([self.root1]), filename)
+        source = files.SoySource(files.Tree(paths = [self.root1]), filename)
         self.assertEqual(source.provides, set(["examples.soy"]))
         self.assertEqual(source.requires, set(["soy", "soy.StringBuilder"]))
 
@@ -345,7 +345,7 @@ goog.provide('soy');""")
 
 {template .helloWorld}Hello{/template}""")
 
-        source = files.SoySource(files.Tree([self.root1]), filename)
+        source = files.SoySource(files.Tree(paths = [self.root1]), filename)
         self.assertEqual(source.provides, set(["examples.soy2"]))
         self.assertEqual(source.requires, set(["soy", "soy.StringBuilder"]))
 
@@ -371,7 +371,7 @@ Hello
 {/template}
 """)
 
-        tree = files.Tree([self.root1])
+        tree = files.Tree(paths = [self.root1])
         source = tree.getSource("/test.soy")
         self.assertEqual(source.GetSource(), """// This file was automatically generated from test.soy.
 // Please don't edit this file by hand.

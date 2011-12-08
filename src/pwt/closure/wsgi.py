@@ -120,11 +120,19 @@ def get_input_arguments(local_conf):
         inputs = ()
     local_conf["inputs"] = inputs
 
-    local_conf["tree"] = files.Tree(local_conf["paths"].split(), **local_conf)
+    # need to configure Jinja2 environment if appropriate
+    try:
+        local_conf["jinja2.environment"] = files.parse_environment(local_conf)
+    except (KeyError, ValueError), err:
+        pass
+
+    local_conf["paths"] = local_conf["paths"].split()
+
+    local_conf["tree"] = files.Tree(**local_conf)
 
     return local_conf
 
 def paste_combined_closure(global_conf, **local_conf):
     conf = get_input_arguments(local_conf)
 
-    return Combined(**conf)
+    return Combined(tree = conf["tree"])

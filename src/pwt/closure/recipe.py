@@ -12,7 +12,14 @@ class CompileRecipe(object):
 
         config = options.copy()
         config["inputs"] = options["inputs"].split()
-        tree = files.Tree(options["paths"].split(), **config)
+        config["paths"] = options["paths"].split()
+        # need to configure Jinja2 environment if appropriate
+        try:
+            config["jinja2.environment"] = files.parse_environment(options)
+        except (KeyError, ValueError), err:
+            pass
+
+        tree = files.Tree(**config)
         self.compiled_code = tree.getCompiledSource()
 
         md5name = hashlib.md5()
