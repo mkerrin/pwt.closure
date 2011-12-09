@@ -181,6 +181,12 @@ class Tree(object):
         self.config = _default_config.copy()
         self.config.update(config)
 
+        self.tree = self.base = self.path_info = None
+
+    def update(self):
+        if self.tree is not None:
+            return
+
         sources = set()
         path_info = {}
         basefile = None
@@ -221,6 +227,7 @@ class Tree(object):
 
     def getDeps(self, inputs = None):
         # Returns a list of Source objects.
+        self.update()
         inputs = inputs or self.config["inputs"]
 
         input_namespaces = set()
@@ -270,5 +277,6 @@ class Tree(object):
         return stdoutdata
 
     def getSource(self, path_info):
+        self.update()
         # Note: get the Java Script source
         return self.path_info[path_info]

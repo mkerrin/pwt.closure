@@ -269,7 +269,17 @@ class TestFiles(unittest.TestCase):
         return filename
 
     def test_tree1(self):
+        # If we don't update the tree we don't have access to the path_info
         tree = files.Tree(paths = [self.root1])
+        # tree.update()
+        self.assertEqual(tree.path_info, None)
+        tree.update()
+        self.assertNotEqual(tree.path_info, None)
+
+    def test_tree2(self):
+        # We need to update the tree
+        tree = files.Tree(paths = [self.root1])
+        tree.update()
         info = dict(
             [(key, val.GetPath()) for key, val in tree.path_info.items()])
         self.assertEqual(info, {"/base.js": "%s/base.js" % self.root1})
