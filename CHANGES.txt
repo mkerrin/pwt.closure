@@ -4,5 +4,7 @@ CHANGES
 Unreleased
 ----------
 
+- Support the pyramid reloader as well as the original paste system.
+
 - Lazy load the soy templates to only when we actually need to use a closure
   template

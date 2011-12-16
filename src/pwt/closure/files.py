@@ -7,7 +7,23 @@ import subprocess
 import sys
 import tempfile
 
-import paste.reloader
+# We need to reload the server whenever any of our files change. We need
+# to support multiple monitors here.
+_reloaders = []
+try:
+    import paste.reloader
+except ImportError:
+    pass
+else:
+    _reloaders.append(paste.reloader.watch_file)
+
+try:
+    import pyramid.scripts.pserve
+except ImportError:
+    pass
+else:
+    _reloaders.append(pyramid.scripts.pserve.watch_file)
+
 
 # Import the depswrite and source from closure-library checkout
 old_path = sys.path
@@ -212,7 +228,7 @@ class Tree(object):
                 # compiling any templates that need to changed.
                 # This does nothing if we are not running under the PasteScript
                 # server that stops and reloads whenever any changes are found.
-                paste.reloader.watch_file(jsfile)
+                [watch_file(jsfile) for watch_file in _reloaders]
 
                 sources.add(src)
 
