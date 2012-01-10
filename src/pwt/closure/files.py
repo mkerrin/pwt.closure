@@ -223,6 +223,9 @@ class Tree(object):
                 path = jsfile[len(root):]
                 path_info[path] = src
                 src.path_info = path
+                # Rememmber the last modified time so that we can before some
+                # sort of caching of resources.
+                src.mtime = os.stat(jsfile).st_mtime
 
                 # watch file for changes. This reloads the whole server
                 # compiling any templates that need to changed.

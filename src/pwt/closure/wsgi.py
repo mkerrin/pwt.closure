@@ -1,8 +1,10 @@
 import json
 import os
 import urlparse
+import datetime
 
 import webob.dec
+import webob.datetime_utils
 import paste.urlmap
 
 RAW = "RAW"
@@ -10,6 +12,8 @@ SIMPLE = "SIMPLE"
 ADVANCED = "ADVANCED"
 
 import files
+
+JS_CONTENT_TYPE = "application/javascript"
 
 class Input(object):
 
@@ -21,18 +25,26 @@ class Input(object):
         try:
             src = self.tree.getSource(request.path_info)
         except KeyError:
-            status = 404
-            content_type = None
-            output = ""
+            return webob.Response(
+                status = 404,
+                content_type = None)
         else:
-            status = 200
-            content_type = "application/javascript"
-            output = src.GetSource()
+            # Use the file stats to see if we need to send the contents of the
+            # file back to the client.
+            last_modified = datetime.datetime.fromtimestamp(
+                int(src.mtime), webob.datetime_utils.UTC)
+            if request.if_modified_since and \
+                   last_modified <= request.if_modified_since:
+                return webob.Response(
+                    status = 304,
+                    content_type = JS_CONTENT_TYPE,
+                    last_modified = src.mtime)
 
-        return webob.Response(
-            body = output,
-            status = status,
-            content_type = content_type)
+            return webob.Response(
+                body = src.GetSource(), # May call external programs
+                status = 200,
+                content_type = JS_CONTENT_TYPE,
+                last_modified = src.mtime)
 
 
 class Raw(object):
