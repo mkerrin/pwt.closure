@@ -150,8 +150,12 @@ def _GetClosureBaseFile(sources):
 
 def _IsClosureBaseFile(js_source):
   """Returns true if the given _PathSource is the Closure base.js source."""
-  return (os.path.basename(js_source.GetPath()) == 'base.js' and
-          js_source.provides == set(['goog']))
+  # Note that due to changes by Michael Kerrin, GetPath() can return None
+  # in some cases, namely when we are generating templates to Java Script
+  # server side.
+  return js_source.GetPath() and \
+         os.path.basename(js_source.GetPath()) == 'base.js' and \
+         js_source.provides == set(['goog'])
 
 
 class _PathSource(source.Source):
