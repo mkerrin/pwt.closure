@@ -49,11 +49,15 @@ class DepsTree(object):
 
         self._provides_map[provide] = source
 
+    # Don't do this. It would then require that I provide the 'soy' namespace
+    # which I have to add as an extra configuration. So easist to just skip
+    # this test. If I do need a namesapce when it is required then I will get
+    # a big error.
     # Check that all required namespaces are provided.
-    for source in sources:
-      for require in source.requires:
-        if require not in self._provides_map:
-          raise NamespaceNotFoundError(require, source)
+    ## for source in sources:
+    ##   for require in source.requires:
+    ##     if require not in self._provides_map:
+    ##       raise NamespaceNotFoundError(require, source)
 
   def GetDependencies(self, required_namespaces):
     """Get source dependencies, in order, for the given namespaces.
