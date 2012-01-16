@@ -13,6 +13,7 @@ class CompileRecipe(object):
         config = options.copy()
         config["inputs"] = options["inputs"].split()
         config["paths"] = options["paths"].split()
+        config["compiler_flags"] = options.get("compiler_flags", "").split()
         # need to configure Jinja2 environment if appropriate
         try:
             config["jinja2.environment"] = files.parse_environment(options)
