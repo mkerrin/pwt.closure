@@ -43,7 +43,8 @@ class Source(jinja2.visitor.NodeVisitor):
             self._path)
 
     def GetPath(self):
-        return self._path
+        # I want files.py to call GetSource when compiling Java Script templates
+        return None
 
     def visit_NamespaceNode(self, node):
         self.provides.add(node.namespace.encode("utf-8"))

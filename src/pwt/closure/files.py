@@ -1,3 +1,4 @@
+import logging
 import os.path
 import urlparse
 import re
@@ -270,30 +271,45 @@ class Tree(object):
     def getCompiledSource(self, inputs = None):
         deps = self.getDeps(inputs)
 
-        args = ["java", "-jar", self.config["compiler_jar"]]
-        for src in deps:
-            path = src.GetPath()
-            if path is None:
-                # Soy Source files create tempfiles so we need to recreate
-                # them now so that we don't leave loads of tempfiles on the
-                # system
-                # tp - tempfile that gets cleared out when the pointer goes
-                # out of scope
-                fp = tempfile.NamedTemporaryFile(suffix = ".js")
-                fp.write(src.GetSource())
-                fp.flush()
-                path = fp.name
-            args += ["--js", path]
+        # Collect all the temporary files and remove them at the end in a
+        # finally statement.
+        alltempfiles = []
 
-        args += self.config["compiler_flags"]
+        try:
+            args = ["java", "-jar", self.config["compiler_jar"]]
+            for src in deps:
+                path = src.GetPath()
+                if path is None:
+                    # Soy Source files create tempfiles so we need to recreate
+                    # them now so that we don't leave loads of tempfiles on the
+                    # system
+                    # tp - tempfile that gets cleared out when the pointer goes
+                    # out of scope
+                    fp = tempfile.NamedTemporaryFile(
+                        suffix = ".js", delete = False)
+                    fp.write(src.GetSource())
+                    fp.close()
+                    path = fp.name
 
-        proc = subprocess.Popen(args, stdout = subprocess.PIPE)
-        stdoutdata, unused_stderrdata = proc.communicate()
+                    alltempfiles.append(path)
 
-        if proc.returncode != 0:
-            raise ValueError("Compilation failed")
+                args += ["--js", path]
 
-        return stdoutdata
+            args += self.config["compiler_flags"]
+
+            logging.info(
+                "Compiling with the following command: %s", " ".join(args))
+
+            proc = subprocess.Popen(args, stdout = subprocess.PIPE)
+            stdoutdata, unused_stderrdata = proc.communicate()
+
+            if proc.returncode != 0:
+                raise ValueError("Compilation failed")
+
+            return stdoutdata
+        finally:
+            for tmp in alltempfiles:
+                os.remove(tmp)
 
     def getSource(self, path_info):
         self.update()
