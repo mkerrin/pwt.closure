@@ -13,6 +13,9 @@ class CompileRecipe(object):
         config = options.copy()
         config["inputs"] = options["inputs"].split()
         config["paths"] = options["paths"].split()
+        compiler_jar = options.get("compiler_jar", None)
+        if compiler_jar:
+            config["compiler_jar"] = compiler_jar
         config["compiler_flags"] = options.get("compiler_flags", "").split()
         # need to configure Jinja2 environment if appropriate
         try:
