@@ -118,6 +118,8 @@ class Deps(object):
 
     @webob.dec.wsgify
     def __call__(self, request):
+        # XXX - generate an unique ID on start up and use this as a Etag
+        # to perform caching on this file.
         output = files.MakeDepsFile(self.tree)
 
         return webob.Response(
