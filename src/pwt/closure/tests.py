@@ -209,7 +209,10 @@ class WSGICompile(unittest.TestCase):
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
         expectedBody = open(
-            os.path.join(os.path.dirname(__file__), "test_deps1.js")).read()
+            os.path.join(
+                os.path.dirname(__file__), "test_deps1.js"
+                )
+            ).read()
         self.assertEqual(resp.body, expectedBody)
 
     def get_subApp(self, inputs):

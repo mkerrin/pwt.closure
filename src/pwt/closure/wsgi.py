@@ -120,7 +120,8 @@ class Deps(object):
     def __call__(self, request):
         # XXX - generate an unique ID on start up and use this as a Etag
         # to perform caching on this file.
-        output = files.MakeDepsFile(self.tree)
+        base_url = urlparse.urljoin(request.url, "input/")
+        output = files.MakeDepsFile(self.tree, base_url)
 
         return webob.Response(
             body = output, content_type = "application/javascript")

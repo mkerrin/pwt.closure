@@ -317,15 +317,17 @@ class Tree(object):
         return self.path_info[path_info]
 
 
-def MakeDepsFile(tree):
+def MakeDepsFile(tree, base_url = ""):
     """
     Convert the Tree object into a deps.js file. Returns the contents of
     such a file.
     """
     tree.update()
 
+    # We remove the starting '/' on all the path_info
     source_map = dict([
-        (src.path_info, src) for src in tree.tree._sources
+        (urlparse.urljoin(base_url, src.path_info[1:]), src)
+        for src in tree.tree._sources
         ])
 
     return depswriter.MakeDepsFile(source_map)
