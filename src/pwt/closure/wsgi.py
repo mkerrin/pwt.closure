@@ -111,12 +111,26 @@ class Compile(object):
             body = output, content_type = "application/javascript")
 
 
+class Deps(object):
+
+    def __init__(self, tree, **kwargs):
+        self.tree = tree
+
+    @webob.dec.wsgify
+    def __call__(self, request):
+        output = files.MakeDepsFile(self.tree)
+
+        return webob.Response(
+            body = output, content_type = "application/javascript")
+
+
 class Combined(object):
 
     def __init__(self, **local_conf):
         self.app = paste.urlmap.URLMap()
         self.app["/compile"] = Raw(**local_conf)
         self.app["/input"] = Input(**local_conf)
+        self.app["/deps"] = Deps(**local_conf)
 
     def __call__(self, environ, start_response):
         return self.app(environ, start_response)
