@@ -37,6 +37,7 @@ setup(
             ],
         "zc.buildout": [
             "compile = pwt.closure.recipe:CompileRecipe",
+            "deps = pwt.closure.recipe:DepsRecipe",
             ],
         },
 

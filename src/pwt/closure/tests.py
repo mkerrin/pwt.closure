@@ -408,25 +408,20 @@ class RecipeTestCase(unittest.TestCase):
 
         self.cwd = os.getcwd()
 
-    def tearDown(self):
-        shutil.rmtree(self.base)
-        os.chdir(self.cwd)
-
-    def test_recipe(self):
         # XXX - when we run the recipe in the test buildout upgrades itself and
         # installs a new version of setuptools and zc.buildout but never
         # reuses the ones installed by the buildout to generate the test
         # scripts.
-        base = os.path.join(self.base, "_TEST_")
-        os.mkdir(base)
-        media = os.path.join(base, "media")
-        os.mkdir(media)
+        self.builddir = os.path.join(self.base, "_TEST_")
+        os.mkdir(self.builddir)
+        self.media = os.path.join(self.builddir, "media")
+        os.mkdir(self.media)
 
         # Nothing so far
-        compiled = os.listdir(media)
+        compiled = os.listdir(self.media)
         self.assertEqual(len(compiled), 0)
 
-        deggs = os.path.join(base, "develop-eggs")
+        deggs = os.path.join(self.builddir, "develop-eggs")
         os.mkdir(deggs)
 
         zc.buildout.testing.install_develop("setuptools", deggs)
@@ -435,6 +430,11 @@ class RecipeTestCase(unittest.TestCase):
         zc.buildout.testing.install_develop("Paste", deggs)
         zc.buildout.testing.install_develop("WebOb", deggs)
 
+    def tearDown(self):
+        shutil.rmtree(self.base)
+        os.chdir(self.cwd)
+
+    def test_compiled_recipe(self):
         closure_path = os.path.abspath(
             os.path.join(
                 os.path.dirname(__file__),
@@ -442,7 +442,7 @@ class RecipeTestCase(unittest.TestCase):
                 )
             )
 
-        open(os.path.join(base, "buildout.cfg"), "w").write("""
+        open(os.path.join(self.builddir, "buildout.cfg"), "w").write("""
 [buildout]
 parts = compiled.js
 
@@ -458,10 +458,10 @@ outputdir = %(media)s
 """ % {"closure": closure_path,
        "pwt.closure": os.path.dirname(__file__),
        "inputs": os.path.join(os.path.dirname(__file__), "test1.js"),
-       "media": media,
+       "media": self.media,
        })
 
-        os.chdir(base)
+        os.chdir(self.builddir)
         config = [
             ("buildout", "log-level", "WARNING"),
             ("buildout", "offline", "true"),
@@ -471,9 +471,51 @@ outputdir = %(media)s
             "buildout.cfg", config, user_defaults = False,
             ).bootstrap([])
 
-        buildout = os.path.join(base, "bin", "buildout")
+        buildout = os.path.join(self.builddir, "bin", "buildout")
         os.system(buildout)
 
-        compiled = os.listdir(media)
+        compiled = os.listdir(self.media)
         self.assertEqual(len(compiled), 1)
         self.assert_(compiled[0].endswith(".js"))
+
+    def test_deps_recipe(self):
+        closure_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..", "..", "..", "checkouts", "closure"
+                )
+            )
+
+        open(os.path.join(self.builddir, "buildout.cfg"), "w").write("""
+[buildout]
+parts = deps.js
+
+[deps.js]
+recipe = pwt.closure:deps
+paths =
+    %(closure)s
+    %(pwt.closure)s
+
+deps_js = %(media)s/deps.js
+""" % {"closure": closure_path,
+       "pwt.closure": os.path.dirname(__file__),
+       "inputs": os.path.join(os.path.dirname(__file__), "test1.js"),
+       "media": self.media,
+       })
+
+        os.chdir(self.builddir)
+        config = [
+            ("buildout", "log-level", "WARNING"),
+            ("buildout", "offline", "true"),
+            ("buildout", "newest", "false"),
+            ]
+        zc.buildout.buildout.Buildout(
+            "buildout.cfg", config, user_defaults = False,
+            ).bootstrap([])
+
+        buildout = os.path.join(self.builddir, "bin", "buildout")
+        os.system(buildout)
+
+        deps = os.listdir(self.media)
+        self.assertEqual(len(deps), 1)
+        self.assertEqual(deps[0], "deps.js")
