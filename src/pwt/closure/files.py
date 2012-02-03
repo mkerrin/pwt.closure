@@ -315,3 +315,17 @@ class Tree(object):
         self.update()
         # Note: get the Java Script source
         return self.path_info[path_info]
+
+
+def MakeDepsFile(tree):
+    """
+    Convert the Tree object into a deps.js file. Returns the contents of
+    such a file.
+    """
+    tree.update()
+
+    source_map = dict([
+        (src.path_info, src) for src in tree.tree._sources
+        ])
+
+    return depswriter.MakeDepsFile(source_map)

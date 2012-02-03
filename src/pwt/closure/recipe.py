@@ -55,12 +55,7 @@ class DepsRecipe(object):
 
         tree = getTree(options)
 
-        tree.update()
-        source_map = dict([
-            (src.path_info, src) for src in tree.tree._sources
-            ])
-
-        self.compiled_code = files.depswriter.MakeDepsFile(source_map)
+        self.compiled_code = files.MakeDepsFile(tree)
 
     def install(self):
         open(os.path.join(self.options["deps_js"]), "w"). \
