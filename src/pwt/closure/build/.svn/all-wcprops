@@ -1,13 +1,13 @@
 K 25
 svn:wc:ra_dav:version-url
 V 42
-/svn/!svn/ver/1499/trunk/closure/bin/build
+/svn/!svn/ver/1528/trunk/closure/bin/build
 END
 depswriter.py
 K 25
 svn:wc:ra_dav:version-url
 V 56
-/svn/!svn/ver/1499/trunk/closure/bin/build/depswriter.py
+/svn/!svn/ver/1528/trunk/closure/bin/build/depswriter.py
 END
 depstree_test.py
 K 25
@@ -19,7 +19,7 @@ depstree.py
 K 25
 svn:wc:ra_dav:version-url
 V 54
-/svn/!svn/ver/1499/trunk/closure/bin/build/depstree.py
+/svn/!svn/ver/1528/trunk/closure/bin/build/depstree.py
 END
 source_test.py
 K 25
