@@ -317,16 +317,19 @@ class Tree(object):
         return self.path_info[path_info]
 
 
-def MakeDepsFile(tree, base_url = ""):
+def MakeDepsFile(tree, base_path = ""):
     """
     Convert the Tree object into a deps.js file. Returns the contents of
     such a file.
+
+    Note that the base_url shouldn't contain the host. As then goog.require
+    we break due to limitations in its implementation.
     """
     tree.update()
 
     # We remove the starting '/' on all the path_info
     source_map = dict([
-        (urlparse.urljoin(base_url, src.path_info[1:]), src)
+        (urlparse.urljoin(base_path, src.path_info[1:]), src)
         for src in tree.tree._sources
         ])
 

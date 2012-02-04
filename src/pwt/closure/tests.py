@@ -151,25 +151,6 @@ class WSGICompile(unittest.TestCase):
         self.assertEqual(resp.status_int, 404)
         self.assertEqual(resp.body, "")
 
-    def get_DepsApp(self):
-        paths = [
-            os.path.join(
-                os.path.dirname(__file__),
-                "..", "..", "..", "checkouts", "closure"),
-            os.path.join(os.path.dirname(__file__)),
-            ]
-        return webtest.TestApp(
-            wsgi.Deps(tree = files.Tree(paths = paths)))
-
-    def test_deps1(self):
-        app = self.get_DepsApp()
-        resp = app.get("/")
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual(resp.content_type, "application/javascript")
-        expectedBody = open(
-            os.path.join(os.path.dirname(__file__), "test_deps1.js")).read()
-        self.assertEqual(resp.body, expectedBody)
-
     def get_combined(self, inputs):
         paths = [
             os.path.join(
@@ -202,18 +183,6 @@ class WSGICompile(unittest.TestCase):
         resp = app.get("/input/closure/goog/base.js")
         self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.content_type, "application/javascript")
-
-    def test_combined_deps1(self):
-        app = self.get_combined(["test1.js"])
-        resp = app.get("/deps")
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual(resp.content_type, "application/javascript")
-        expectedBody = open(
-            os.path.join(
-                os.path.dirname(__file__), "test_deps1.js"
-                )
-            ).read()
-        self.assertEqual(resp.body, expectedBody)
 
     def get_subApp(self, inputs):
         paths = [
@@ -282,6 +251,62 @@ class WSGICompile(unittest.TestCase):
 
         resp = app.get("/input/test1.js")
         self.assertEqual(resp.status_int, 200)
+
+
+class WSGICompile2(unittest.TestCase):
+    # We need to fix the closure tree when generating deps.js files as
+    # otherwise we will get different output based on the version
+    # of the closure library that we are using.
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+
+        self.writefile("base.js", "goog.provide('goog');\n")
+
+    def tearDown(self):
+        shutil.rmtree(self.root)
+
+    def writefile(self, name, contents):
+        filename = os.path.join(self.root, name)
+        open(filename, "w").write(contents)
+        return filename
+
+    def get_DepsApp(self):
+        paths = [
+            self.root,
+            os.path.join(os.path.dirname(__file__)),
+            ]
+        return webtest.TestApp(
+            wsgi.Deps(tree = files.Tree(paths = paths)))
+
+    def test_deps1(self):
+        app = self.get_DepsApp()
+        resp = app.get("/")
+        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(resp.content_type, "application/javascript")
+        expectedBody = open(
+            os.path.join(os.path.dirname(__file__), "test_deps1.js")).read()
+        self.assertEqual(resp.body, expectedBody)
+
+    def get_combined(self, inputs):
+        paths = [
+            self.root,
+            os.path.join(os.path.dirname(__file__)),
+            ]
+        return webtest.TestApp(wsgi.Combined(
+            tree = files.Tree(paths = paths, inputs = inputs)))
+
+    def test_combined_deps1(self):
+        app = self.get_combined(["test1.js"])
+        resp = app.get("/deps")
+        self.assertEqual(resp.status_int, 200)
+        self.assertEqual(resp.content_type, "application/javascript")
+        expectedBody = open(
+            os.path.join(
+                os.path.dirname(__file__), "test_deps1.js"
+                )
+            ).read()
+        self.assertEqual(resp.body, expectedBody)
 
 
 class TestFiles(unittest.TestCase):
