@@ -17,14 +17,20 @@ setup(
 
     install_requires = [
         "setuptools",
-        "WebOb",
-        "Paste",
         ],
 
     extras_require = {
         "test": [
             "WebTest",
+            "Paste",
             "zc.buildout",
+            ],
+        # You must install this extra requirement so that I don't have to
+        # worry about installing development versions of WebOb and Paste
+        # during the installation of recipes in buildout.
+        "web": [
+            "WebOb",
+            "Paste",
             ],
         },
 
