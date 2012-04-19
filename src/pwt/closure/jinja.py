@@ -6,6 +6,7 @@ import jinja2.environment
 
 import pwt.jinja2js.jscompiler
 import pwt.jinja2js.environment
+import pwt.jinja2js.nodes
 
 import files
 
@@ -55,7 +56,7 @@ class Source(jinja2.visitor.NodeVisitor):
         fromnode = self.env._parse(source, name, filename)
 
         # Need to find the namespace
-        namespace = list(fromnode.find_all(nodes.NamespaceNode))
+        namespace = list(fromnode.find_all(pwt.jinja2js.nodes.NamespaceNode))
         if len(namespace) != 1:
             raise jinja2.compiler.TemplateAssertionError(
                 "You must supply one namespace for your template",
