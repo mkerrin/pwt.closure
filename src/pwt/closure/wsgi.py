@@ -128,6 +128,9 @@ class Deps(object):
 
 
 class Combined(object):
+    """
+    This is the main WSGI entry point
+    """
 
     def __init__(self, **local_conf):
         self.app = paste.urlmap.URLMap()
