@@ -36,11 +36,9 @@ class CompileRecipe(object):
         self.options["filename"] = self.filename = md5name.hexdigest() + ".js"
 
     def install(self):
-        open(
-            os.path.join(self.options["outputdir"], self.filename),
-            "w"). \
-            write(self.compiled_code)
-        return (self.filename,)
+        filename = os.path.join(self.options["outputdir"], self.filename)
+        open(filename, "w").write(self.compiled_code)
+        return (filename,)
 
     def update(self):
         return self.install()
@@ -58,8 +56,7 @@ class DepsRecipe(object):
         self.compiled_code = files.MakeDepsFile(tree)
 
     def install(self):
-        open(os.path.join(self.options["deps_js"]), "w"). \
-                                                    write(self.compiled_code)
+        open(self.options["deps_js"], "w").write(self.compiled_code)
         return (self.options["deps_js"],)
 
     def update(self):
