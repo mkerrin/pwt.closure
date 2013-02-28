@@ -1,3 +1,6 @@
+"""
+
+"""
 from setuptools import find_packages, setup
 
 setup(
@@ -7,8 +10,8 @@ setup(
     author = "Michael Kerrin",
     author_email = "michael.kerrin@gmail.com",
     license = "BSD",
-    description = "",
-    long_description = "",
+    description = __doc__,
+    long_description = open("README.txt").read(),
     url = "https://github.com/mkerrin/pwt.closure",
 
     packages = find_packages("src"),
