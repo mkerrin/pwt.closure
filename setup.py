@@ -1,5 +1,6 @@
 """
-
+pwt.closure is a tool to compile and manage JavaScript dependencies of your
+web application.
 """
 from setuptools import find_packages, setup
 
