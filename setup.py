@@ -2,14 +2,14 @@ from setuptools import find_packages, setup
 
 setup(
     name = "pwt.closure",
-    version = "0.1",
+    version = "0.2",
 
     author = "Michael Kerrin",
     author_email = "michael.kerrin@gmail.com",
     license = "BSD",
     description = "",
     long_description = "",
-    url = "https://github.com/mkerrin/pwt.jinja2js",
+    url = "https://github.com/mkerrin/pwt.closure",
 
     packages = find_packages("src"),
     package_dir = {"": "src"},

@@ -6,7 +6,7 @@
 Welcome to pwt.closure's documentation!
 =======================================
 
-.. include:: description.rst.inc
+.. include:: ../../README.txt
 
 Contents:
 
